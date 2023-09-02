@@ -14,14 +14,7 @@ const data = {
   employees: ["Mitch", "Steve", "Dave"],
 };
 
-// app.get("/test", (req, res) => {
-//     console.log("handling the route");
-//     res.write("test");
-//     res.end();
-// })
-
 app.get("/employees", (req, res) => {
-  console.log("getting employees");
   if (data.employees.length === 0) {
     res.status(200).write("There are no employees");
     return res.end();
@@ -36,10 +29,9 @@ app.get("/employees", (req, res) => {
 });
 
 app.post("/deleteEmployee", (req, res) => {
-    console.log(req.body);
-     const employee = req.body;
+  console.log(req.body);
+  const employee = req.body;
   if (typeof employee === "string") {
-   
     const employees = data.employees;
     const hasEmployee = employees.includes(employee);
     if (hasEmployee) {
@@ -67,5 +59,19 @@ app.post("/addEmployee", (req, res) => {
     return res.end();
   }
   res.status(200).write("Failed to add employee ", employee);
+  return res.end();
+});
+
+const pw = "jeffersonstreet1!";
+
+app.post("/loginAdmin", (req, res) => {
+  console.log(req.body, "login");
+  if (typeof req.body === "string") {
+    if (req.body === pw) {
+      res.status(200);
+      return res.end();
+    }
+  }
+  res.status(401);
   return res.end();
 });
