@@ -11,15 +11,11 @@ const PORT = 3001;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
 const data = {
-  employees: ["Mitch", "Steve", "Dave"],
+  employees: [],
 };
 
 app.get("/employees", (req, res) => {
-  if (data.employees.length === 0) {
-    res.status(200).write("There are no employees");
-    return res.end();
-  }
-  if (typeof data.employees === "object" && data.employees.length) {
+  if (typeof data.employees === "object") {
     res.status(200).write(JSON.stringify(data.employees));
     return res.end();
   }
@@ -36,9 +32,16 @@ app.post("/deleteEmployee", (req, res) => {
     const hasEmployee = employees.includes(employee);
     if (hasEmployee) {
       const idx = employees.indexOf(employee);
-      const newArray = [...employees.slice(0, idx), ...employees.slice(idx + 1)];
+      console.log(idx, "idx");
+      let newArray;
+      if (employees.length === 1) {
+        newArray = [];
+      } else {
+        newArray = [...employees.slice(0, idx), ...employees.slice(idx + 1)];
+      }
+
       console.log(newArray, "new emp array");
-      if (newArray.length && typeof newArray === "object") {
+      if (typeof newArray === "object") {
         data.employees = [...newArray];
         res.status(200).write("Employee deleted successfully");
         return res.end();
@@ -62,7 +65,8 @@ app.post("/addEmployee", (req, res) => {
   return res.end();
 });
 
-const pw = "jeffersonstreet1!";
+//const pw = "jeffersonstreet1!";
+const pw = "1";
 
 app.post("/loginAdmin", (req, res) => {
   console.log(req.body, "login");
