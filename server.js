@@ -25,14 +25,12 @@ app.get("/employees", (req, res) => {
 });
 
 app.post("/deleteEmployee", (req, res) => {
-  console.log(req.body);
   const employee = req.body;
   if (typeof employee === "string") {
     const employees = data.employees;
     const hasEmployee = employees.includes(employee);
     if (hasEmployee) {
       const idx = employees.indexOf(employee);
-      console.log(idx, "idx");
       let newArray;
       if (employees.length === 1) {
         newArray = [];
@@ -40,7 +38,6 @@ app.post("/deleteEmployee", (req, res) => {
         newArray = [...employees.slice(0, idx), ...employees.slice(idx + 1)];
       }
 
-      console.log(newArray, "new emp array");
       if (typeof newArray === "object") {
         data.employees = [...newArray];
         res.status(200).write("Employee deleted successfully");
@@ -53,7 +50,6 @@ app.post("/deleteEmployee", (req, res) => {
 });
 
 app.post("/addEmployee", (req, res) => {
-  console.log(req.body);
   if (typeof req.body === "string") {
     const employee = req.body;
     data.employees.push(employee);
@@ -69,7 +65,6 @@ app.post("/addEmployee", (req, res) => {
 const pw = "1";
 
 app.post("/loginAdmin", (req, res) => {
-  console.log(req.body, "login");
   if (typeof req.body === "string") {
     if (req.body === pw) {
       res.status(200);
