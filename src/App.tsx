@@ -29,7 +29,6 @@ const CalendarContainer = styled.div``;
 const WidgetContainer = styled.div`
   display: flex;
   flex-direction: column;
-  border: 1px solid yellow;
 `;
 
 function AdminLoginView({
@@ -45,16 +44,20 @@ function AdminLoginView({
   setAdminLoginView: (e: any) => void;
   className?: string;
 }) {
+  async function submitLogin() {
+    return await fetch("http://127.0.0.1:3001/loginAdmin", {
+      method: "post",
+      headers: { "Content-Type": "text/plain" },
+      body: password,
+    });
+  }
+
   return (
     <div
       className={className}
       onKeyDown={async (e) => {
         if (e.key === "Enter") {
-          const response = await fetch("http://127.0.0.1:3001/loginAdmin", {
-            method: "post",
-            headers: { "Content-Type": "text/plain" },
-            body: password,
-          });
+          const response = await submitLogin();
 
           if (response.ok) {
             setAdminLoggedIn(true);
@@ -63,22 +66,38 @@ function AdminLoginView({
       }}
     >
       <div className="admin-wrapper">
-        <input
-          type="password"
-          value={password}
-          placeholder="Enter Password"
-          onChange={(e) => {
-            setPassword(e.target.value);
-          }}
-        />
+        <div>
+          <input
+            type="password"
+            value={password}
+            placeholder="Enter Password"
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
+          />
+          <button
+            className="login-button"
+            onClick={async () => {
+              const response = await submitLogin();
+
+              if (response.ok) {
+                setAdminLoggedIn(true);
+              }
+            }}
+          >
+            Login
+          </button>
+        </div>
+
         <button
+          className="go-back"
           onClick={() => {
             setPassword("");
             window.history.pushState(null, "", "/");
             setAdminLoginView(false);
           }}
         >
-          Go Back
+          Go Back To Calendar
         </button>
       </div>
     </div>
@@ -86,12 +105,13 @@ function AdminLoginView({
 }
 
 const StyledAdminLoginView = styled(AdminLoginView)`
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
   height: 100vh;
   width: 100vw;
-  background-color: yellow;
 
   .admin-wrapper {
     display: flex;
@@ -103,13 +123,19 @@ const StyledAdminLoginView = styled(AdminLoginView)`
     padding: 0.8em;
   }
 
-  button {
-    align-self: flex-end;
-    width: 3.2em;
-    margin-top: 1em;
-    &:hover {
-      cursor: pointer;
-    }
+  .go-back {
+    align-self: center;
+    width: 8em;
+    margin-top: 2em;
+  }
+
+  .login-button {
+    margin-left: 1em;
+    padding: 0.8em;
+  }
+
+  button:hover {
+    cursor: pointer;
   }
 `;
 
@@ -188,6 +214,12 @@ function AdminView({
   );
 }
 
+const Button = styled.button`
+  opacity: 1;
+  background-color: green;
+  position: absolute;
+`;
+
 function Modal({
   employee,
   setShowModal,
@@ -226,6 +258,7 @@ function Modal({
         >
           Yes
         </button>
+
         <button
           onClick={async () => {
             setShowModal(false);
@@ -239,13 +272,10 @@ function Modal({
 }
 
 const StyledModal = styled(Modal)<{ show: boolean }>`
-  opacity: 0.8;
-  background-color: white;
-  display: ${(props) => (props.show ? "flex" : "none")};
-  height: 100vh;
-  width: 100vw;
   position: absolute;
-  top: 0;
+
+  z-index: 2;
+
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -255,11 +285,22 @@ const StyledModal = styled(Modal)<{ show: boolean }>`
   button {
     margin: 0.5em;
     padding: 0.5em 1em;
+    opacity: 1;
   }
 
   button:hover {
     cursor: pointer;
   }
+`;
+
+const Fog = styled.div<{ show: boolean }>`
+  opacity: 0.8;
+  background-color: white;
+  display: ${(props) => (props.show ? "flex" : "none")};
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
 `;
 
 function AdminLoggedIn({
@@ -281,6 +322,7 @@ function AdminLoggedIn({
 
   return (
     <div className={className}>
+      <Fog show={showModal} />
       {showModal && (
         <StyledModal
           employee={selected}
@@ -289,15 +331,7 @@ function AdminLoggedIn({
           setNeedsUpdate={setNeedsUpdate}
         />
       )}
-      <button
-        onClick={() => {
-          setAdminLoggedIn(false);
-          setAdminLoginView(false);
-          window.history.pushState(null, "", "/");
-        }}
-      >
-        Go Back
-      </button>
+
       <span>
         <input
           placeholder="employee name"
@@ -338,6 +372,17 @@ function AdminLoggedIn({
             </div>
           ))
         : "No employees found"}
+      <br />
+      <br />
+      <button
+        onClick={() => {
+          setAdminLoggedIn(false);
+          setAdminLoginView(false);
+          window.history.pushState(null, "", "/");
+        }}
+      >
+        Go Back To Calendar
+      </button>
     </div>
   );
 }
@@ -345,7 +390,14 @@ function AdminLoggedIn({
 const StyledAdminLoggedIn = styled(AdminLoggedIn)`
   height: 100vh;
   width: 100vw;
-  background-color: green;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  button {
+    margin: 1em 1em 0em;
+  }
 `;
 
 const day = ["Today", "Tomorrow"];
