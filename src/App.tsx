@@ -1,36 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 
-const Wrapper = styled.div`
-  height: 100vh;
-  width: 100vw;
-  background-color: white;
-  display: grid;
-  place-items: center;
-  border: 1px solid red;
-`;
-
-const Selector = styled.button<{ selected: boolean }>`
-  background-color: ${(props) => (props.selected ? "green" : "lightgreen")};
-  height: 3em;
-  width: 6em;
-  border: 1px solid pink;
-`;
-
-const SelectorContainer = styled.div`
-  display: flex;
-  align-self: flex-start;
-  flex-direction: row;
-  border: 1px solid red;
-`;
-
-const CalendarContainer = styled.div``;
-
-const WidgetContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
 function AdminLoginView({
   password,
   setPassword,
@@ -137,87 +107,6 @@ const StyledAdminLoginView = styled(AdminLoginView)`
   button:hover {
     cursor: pointer;
   }
-`;
-
-function AdminView({
-  addEmployee,
-  setAddEmployee,
-  setNeedsUpdate,
-  deleteEmployee,
-  setDeleteEmployee,
-  className,
-}: {
-  addEmployee: string;
-  deleteEmployee: string;
-  setAddEmployee: (e: string) => void;
-  setDeleteEmployee: (e: string) => void;
-  setNeedsUpdate: (e: (u: boolean) => boolean) => void;
-  className: string;
-}) {
-  return (
-    <div className={className}>
-      <span>
-        <input
-          placeholder="employee name"
-          value={addEmployee}
-          onChange={(e) => setAddEmployee(e.target.value)}
-        />
-        <button
-          disabled={!addEmployee}
-          onClick={async () => {
-            if (addEmployee) {
-              const result = await fetch("http://127.0.0.1:3001/addEmployee", {
-                method: "post",
-                headers: { "Content-Type": "text/plain" },
-                body: addEmployee,
-              });
-              const text = await result.text();
-              setAddEmployee("");
-              setNeedsUpdate((u) => !u);
-              console.log(text);
-            }
-          }}
-        >
-          Add
-        </button>
-      </span>
-      <span>
-        <input
-          placeholder="employee name"
-          value={deleteEmployee}
-          onChange={(e) => setDeleteEmployee(e.target.value)}
-        />
-        <button
-          disabled={!deleteEmployee}
-          onClick={async () => {
-            if (deleteEmployee) {
-              try {
-                const result = await fetch("http://127.0.0.1:3001/deleteEmployee", {
-                  method: "post",
-                  headers: { "Content-Type": "text/plain" },
-                  body: deleteEmployee,
-                });
-                const text = await result.text();
-                setDeleteEmployee("");
-                setNeedsUpdate((u) => !u);
-                console.log(text);
-              } catch (e) {
-                console.log("No employee found!");
-              }
-            }
-          }}
-        >
-          Delete
-        </button>
-      </span>
-    </div>
-  );
-}
-
-const Button = styled.button`
-  opacity: 1;
-  background-color: green;
-  position: absolute;
 `;
 
 function Modal({
@@ -400,13 +289,121 @@ const StyledAdminLoggedIn = styled(AdminLoggedIn)`
   }
 `;
 
+const Wrapper = styled.div`
+  height: 100vh;
+  width: 100vw;
+  background-color: rgb(244, 244, 244);
+  display: grid;
+  place-items: center;
+`;
+
+const DayButton = styled.button<{ selected: boolean }>`
+  background-color: ${(props) => (props.selected ? "white" : "rgb(222,222,222)")};
+  height: 3em;
+  width: 6em;
+
+  position: relative;
+  top: 2px;
+
+  box-sizing: content-box;
+
+  border-bottom: 1px solid ${(props) => (props.selected ? "white" : "black")};
+  border-radius: 8px 8px 0px 0px;
+
+  &:hover {
+    cursor: pointer;
+  }
+`;
+
+const EmployeeButton = styled.button<{ selected: boolean }>`
+  background-color: ${(props) => (props.selected ? "white" : "rgb(222,222,222)")};
+  height: 3em;
+  width: 6em;
+
+  margin: 1em;
+
+  border-radius: 8px;
+  box-shadow: black 1px 1px 1px;
+
+  &:hover {
+    cursor: pointer;
+  }
+`;
+
+const DayButtonContainer = styled.div`
+  display: flex;
+  align-self: flex-start;
+  flex-direction: row;
+`;
+
+const EmployeeContainer = styled.div`
+  display: flex;
+  align-self: flex-start;
+  flex-direction: row;
+`;
+
+const CalendarContainer = styled.div`
+  background-color: white;
+  border: 2px solid black;
+  box-shadow: 4px 4px 6px rgba(100, 100, 100, 0.5);
+
+  border-radius: 0px 8px 8px 8px;
+  width: 33vw;
+  height: 50vh;
+`;
+
+const WidgetContainer = styled.div`
+  padding: 2em;
+  display: flex;
+  flex-direction: column;
+`;
+
 const day = ["Today", "Tomorrow"];
+
+function Calendar({
+  employees,
+  selectedBarber,
+  setSelectedBarber,
+  selectedDay,
+  setSelectedDay,
+}: {
+  employees: string[];
+  selectedBarber: string;
+  setSelectedBarber: (c: string) => void;
+  selectedDay: string;
+  setSelectedDay: (c: string) => void;
+}) {
+  return (
+    <Wrapper>
+      <WidgetContainer>
+        <DayButtonContainer>
+          {day.map((day) => (
+            <DayButton onClick={() => setSelectedDay(day)} selected={selectedDay === day}>
+              {day}
+            </DayButton>
+          ))}
+        </DayButtonContainer>
+
+        <CalendarContainer>
+          <EmployeeContainer>
+            {employees.map((employee) => (
+              <EmployeeButton
+                onClick={() => setSelectedBarber(employee)}
+                selected={selectedBarber === employee}
+              >
+                {employee}
+              </EmployeeButton>
+            ))}
+          </EmployeeContainer>
+        </CalendarContainer>
+      </WidgetContainer>
+    </Wrapper>
+  );
+}
 
 function App() {
   const [selectedBarber, setSelectedBarber] = useState("Mitch");
   const [selectedDay, setSelectedDay] = useState("Today");
-  const [addEmployee, setAddEmployee] = useState("");
-  const [deleteEmployee, setDeleteEmployee] = useState("");
   const [employees, setEmployees] = useState([]);
   const [needsUpdate, setNeedsUpdate] = useState(false);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
@@ -414,12 +411,10 @@ function App() {
   const [adminLoginView, setAdminLoginView] = useState(false);
 
   useEffect(() => {
-    console.log("setting new employee");
     (async () => {
       const result = await fetch("http://127.0.0.1:3001/employees");
       const text = await result.text();
       const employees = JSON.parse(text);
-      console.log(employees, "employees");
       if (typeof employees === "object") {
         setEmployees(employees);
       }
@@ -428,13 +423,9 @@ function App() {
 
   useEffect(() => {
     const pathname = window.location.pathname;
-    console.log(pathname, "pathname");
 
     if (pathname === "/admin") {
-      console.log("admin");
       setAdminLoginView(true);
-    } else {
-      //   window.location.pathname = "/";
     }
   }, []);
 
@@ -461,28 +452,13 @@ function App() {
   }
 
   return (
-    <Wrapper>
-      <WidgetContainer>
-        <SelectorContainer>
-          {employees.map((employee) => (
-            <Selector
-              onClick={() => setSelectedBarber(employee)}
-              selected={selectedBarber === employee}
-            >
-              {employee}
-            </Selector>
-          ))}
-        </SelectorContainer>
-        <SelectorContainer>
-          {day.map((day) => (
-            <Selector onClick={() => setSelectedDay(day)} selected={selectedDay === day}>
-              {day}
-            </Selector>
-          ))}
-        </SelectorContainer>
-        <CalendarContainer></CalendarContainer>
-      </WidgetContainer>
-    </Wrapper>
+    <Calendar
+      selectedBarber={selectedBarber}
+      setSelectedBarber={setSelectedBarber}
+      employees={employees}
+      selectedDay={selectedDay}
+      setSelectedDay={setSelectedDay}
+    />
   );
 }
 
