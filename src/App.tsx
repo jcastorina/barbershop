@@ -192,6 +192,16 @@ const Fog = styled.div<{ show: boolean }>`
   top: 0;
 `;
 
+const hours = ((start, end) => {
+  let hours = [];
+
+  for (let i = start; i < end; i++) {
+    hours.push(i);
+  }
+
+  return hours;
+})(8, 18);
+
 function AdminLoggedIn({
   setAdminLoggedIn,
   setAdminLoginView,
@@ -208,6 +218,10 @@ function AdminLoggedIn({
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, setAddEmployee] = useState("");
   const [selected, setSelected] = useState("");
+  const [selectedStartHour, setSelectedStartHour] = useState(hours[0]);
+  const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
+
+  console.log(selectedStartHour, selectedEndHour);
 
   return (
     <div className={className}>
@@ -220,58 +234,93 @@ function AdminLoggedIn({
           setNeedsUpdate={setNeedsUpdate}
         />
       )}
-
-      <span>
-        <input
-          placeholder="employee name"
-          value={addEmployee}
-          onChange={(e) => setAddEmployee(e.target.value)}
-        />
+      <div className="group-container">
+        <h2>Times</h2>
+        <div>
+          Start Time:{" "}
+          <select
+            onChange={(e) => {
+              setSelectedStartHour(parseInt(e.target.value));
+            }}
+          >
+            {hours.map((hour) => {
+              hour = hour > 12 ? hour - 12 : hour;
+              return <option value={hour}>{hour}</option>;
+            })}
+          </select>
+        </div>
+        <div>
+          End Time:{" "}
+          <select
+            onChange={(e) => {
+              setSelectedEndHour(parseInt(e.target.value));
+            }}
+          >
+            {hours.slice(hours.indexOf(selectedStartHour)).map((hour) => {
+              hour = hour > 12 ? hour - 12 : hour;
+              return <option value={hour}>{hour}</option>;
+            })}
+          </select>
+        </div>
+      </div>
+      <div className="group-container">
+        <h2>Roster</h2>
+        <span>
+          <input
+            placeholder="employee name"
+            value={addEmployee}
+            onChange={(e) => setAddEmployee(e.target.value)}
+            style={{ marginBottom: "1.3em" }}
+            disabled={employees.length > 4}
+          />
+          <button
+            disabled={!addEmployee || employees.length > 4}
+            onClick={async () => {
+              if (addEmployee) {
+                const result = await fetch("http://127.0.0.2:3001/addEmployee", {
+                  method: "post",
+                  headers: { "Content-Type": "text/plain" },
+                  body: addEmployee,
+                });
+                const text = await result.text();
+                setAddEmployee("");
+                setNeedsUpdate((u) => !u);
+                console.log(text);
+              }
+            }}
+          >
+            Add
+          </button>
+        </span>
+        {employees.length
+          ? employees.map((employee) => (
+              <div>
+                <b>
+                  <i>{employee}</i>
+                </b>
+                <button
+                  onClick={async () => {
+                    setSelected(employee);
+                    setShowModal(true);
+                  }}
+                >
+                  Delete Employee
+                </button>
+              </div>
+            ))
+          : "No employees found"}
+        <br />
+        <br />
         <button
-          disabled={!addEmployee}
-          onClick={async () => {
-            if (addEmployee) {
-              const result = await fetch("http://127.0.0.1:3001/addEmployee", {
-                method: "post",
-                headers: { "Content-Type": "text/plain" },
-                body: addEmployee,
-              });
-              const text = await result.text();
-              setAddEmployee("");
-              setNeedsUpdate((u) => !u);
-              console.log(text);
-            }
+          onClick={() => {
+            setAdminLoggedIn(false);
+            setAdminLoginView(false);
+            window.history.pushState(null, "", "/");
           }}
         >
-          Add
+          Go Back To Calendar
         </button>
-      </span>
-      {employees.length
-        ? employees.map((employee) => (
-            <div>
-              <span>{employee}</span>
-              <button
-                onClick={async () => {
-                  setSelected(employee);
-                  setShowModal(true);
-                }}
-              >
-                Delete Employee
-              </button>
-            </div>
-          ))
-        : "No employees found"}
-      <br />
-      <br />
-      <button
-        onClick={() => {
-          setAdminLoggedIn(false);
-          setAdminLoginView(false);
-          window.history.pushState(null, "", "/");
-        }}
-      >
-        Go Back To Calendar
-      </button>
+      </div>
     </div>
   );
 }
@@ -280,9 +329,24 @@ const StyledAdminLoggedIn = styled(AdminLoggedIn)`
   height: 100vh;
   width: 100vw;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+
+  h2 {
+    width: 10em;
+  }
+
+  .group-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 3em;
+    height: 30em;
+    width: 18em;
+    border: 1px solid black;
+  }
 
   button {
     margin: 1em 1em 0em;
@@ -320,7 +384,7 @@ const EmployeeButton = styled.button<{ selected: boolean }>`
   height: 3em;
   width: 6em;
 
-  margin: 1em;
+  margin: 1em 0em 1em 1em;
 
   border-radius: 8px;
   box-shadow: black 1px 1px 1px;
@@ -357,6 +421,10 @@ const WidgetContainer = styled.div`
   display: flex;
   flex-direction: column;
 `;
+
+function TimeContainer() {
+  return <></>;
+}
 
 const day = ["Today", "Tomorrow"];
 
@@ -395,6 +463,7 @@ function Calendar({
               </EmployeeButton>
             ))}
           </EmployeeContainer>
+          <TimeContainer></TimeContainer>
         </CalendarContainer>
       </WidgetContainer>
     </Wrapper>
