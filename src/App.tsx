@@ -1,474 +1,76 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 
-function AdminLoginView({
-  password,
-  setPassword,
-  setAdminLoggedIn,
-  setAdminLoginView,
-  className,
-}: {
-  password: string;
-  setPassword: (e: any) => void;
-  setAdminLoggedIn: (e: any) => void;
-  setAdminLoginView: (e: any) => void;
-  className?: string;
-}) {
-  async function submitLogin() {
-    return await fetch("http://127.0.0.1:3001/loginAdmin", {
-      method: "post",
-      headers: { "Content-Type": "text/plain" },
-      body: password,
-    });
-  }
+import { StyledAdminLoggedIn, StyledAdminLoginView } from "./Admin";
+import { Calendar } from "./Calendar";
 
-  return (
-    <div
-      className={className}
-      onKeyDown={async (e) => {
-        if (e.key === "Enter") {
-          const response = await submitLogin();
+const colors = {
+  hotRed: "#ee1045",
+  rusticRed: "#dd221b",
+  milGreen: "#c8c7b5",
+  coolBlue: "#03a1fb",
+  chairBlue: "#87b5e3",
+  floor: "#af8f71",
+};
 
-          if (response.ok) {
-            setAdminLoggedIn(true);
-          }
-        }
-      }}
-    >
-      <div className="admin-wrapper">
-        <div>
-          <input
-            type="password"
-            value={password}
-            placeholder="Enter Password"
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
-          />
-          <button
-            className="login-button"
-            onClick={async () => {
-              const response = await submitLogin();
-
-              if (response.ok) {
-                setAdminLoggedIn(true);
-              }
-            }}
-          >
-            Login
-          </button>
-        </div>
-
-        <button
-          className="go-back"
-          onClick={() => {
-            setPassword("");
-            window.history.pushState(null, "", "/");
-            setAdminLoginView(false);
-          }}
-        >
-          Go Back To Calendar
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const StyledAdminLoginView = styled(AdminLoginView)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  height: 100vh;
-  width: 100vw;
-
-  .admin-wrapper {
-    display: flex;
-    flex-direction: column;
-  }
-
-  input {
-    width: 16em;
-    padding: 0.8em;
-  }
-
-  .go-back {
-    align-self: center;
-    width: 8em;
-    margin-top: 2em;
-  }
-
-  .login-button {
-    margin-left: 1em;
-    padding: 0.8em;
-  }
-
-  button:hover {
-    cursor: pointer;
-  }
-`;
-
-function Modal({
-  employee,
-  setShowModal,
-  setNeedsUpdate,
-  className,
-}: {
-  employee: string;
-  setShowModal: (u: boolean) => void;
-  setNeedsUpdate: (u: (c: boolean) => boolean) => void;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <span>Delete {employee}?</span>
-      <div>
-        <button
-          onClick={async () => {
-            try {
-              const result = await fetch("http://127.0.0.1:3001/deleteEmployee", {
-                method: "post",
-                headers: { "Content-Type": "text/plain" },
-                body: employee,
-              });
-              const text = await result.text();
-              console.log(text, "running set need supdate");
-              // setNeedsUpdate((u) => !u);
-              console.log(text);
-            } catch (e) {
-              console.log("No employee found!");
-            } finally {
-              console.log("trying to update in finally block");
-              setNeedsUpdate((u) => !u);
-              setShowModal(false);
-            }
-          }}
-        >
-          Yes
-        </button>
-
-        <button
-          onClick={async () => {
-            setShowModal(false);
-          }}
-        >
-          No
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const StyledModal = styled(Modal)<{ show: boolean }>`
+const ColorsContainer = styled.div<{ show: boolean }>`
+  z-index: ${(props) => (props.show ? "50" : "-1")};
+  display: ${(props) => (props.show ? "block" : "none")};
   position: absolute;
-
-  z-index: 2;
-
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 2em;
-
-  button {
-    margin: 0.5em;
-    padding: 0.5em 1em;
-    opacity: 1;
-  }
-
-  button:hover {
-    cursor: pointer;
-  }
+  border: 1px solid gray;
+  top: 200px;
+  left: 2px;
+  height: 30vh;
+  width: 50vw;
 `;
 
-const Fog = styled.div<{ show: boolean }>`
-  opacity: 0.8;
-  background-color: white;
-  display: ${(props) => (props.show ? "flex" : "none")};
-  height: 100vh;
-  width: 100vw;
-  position: absolute;
-  top: 0;
+const Circle = styled.div<{ color: string }>`
+  border-radius: 32px;
+  background-color: ${(props) => props.color};
+  height: 1em;
+  width: 1em;
+  display: inline-block;
 `;
 
-const hours = ((start, end) => {
-  let hours = [];
-
-  for (let i = start; i < end; i++) {
-    hours.push(i);
-  }
-
-  return hours;
-})(8, 18);
-
-function AdminLoggedIn({
-  setAdminLoggedIn,
-  setAdminLoginView,
-  employees,
-  setNeedsUpdate,
-  className,
-}: {
-  setAdminLoggedIn: (u: boolean) => void;
-  setAdminLoginView: (u: boolean) => void;
-  employees: string[];
-  setNeedsUpdate: (c: (u: boolean) => boolean) => void;
-  className?: string;
-}) {
-  const [showModal, setShowModal] = useState(false);
-  const [addEmployee, setAddEmployee] = useState("");
-  const [selected, setSelected] = useState("");
-  const [selectedStartHour, setSelectedStartHour] = useState(hours[0]);
-  const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
-
-  console.log(selectedStartHour, selectedEndHour);
-
-  return (
-    <div className={className}>
-      <Fog show={showModal} />
-      {showModal && (
-        <StyledModal
-          employee={selected}
-          show={showModal}
-          setShowModal={setShowModal}
-          setNeedsUpdate={setNeedsUpdate}
-        />
-      )}
-      <div className="group-container">
-        <h2>Times</h2>
-        <div>
-          Start Time:{" "}
-          <select
-            onChange={(e) => {
-              setSelectedStartHour(parseInt(e.target.value));
-            }}
-          >
-            {hours.map((hour) => {
-              hour = hour > 12 ? hour - 12 : hour;
-              return <option value={hour}>{hour}</option>;
-            })}
-          </select>
-        </div>
-        <div>
-          End Time:{" "}
-          <select
-            onChange={(e) => {
-              setSelectedEndHour(parseInt(e.target.value));
-            }}
-          >
-            {hours.slice(hours.indexOf(selectedStartHour)).map((hour) => {
-              hour = hour > 12 ? hour - 12 : hour;
-              return <option value={hour}>{hour}</option>;
-            })}
-          </select>
-        </div>
-      </div>
-      <div className="group-container">
-        <h2>Roster</h2>
-        <span>
-          <input
-            placeholder="employee name"
-            value={addEmployee}
-            onChange={(e) => setAddEmployee(e.target.value)}
-            style={{ marginBottom: "1.3em" }}
-            disabled={employees.length > 4}
-          />
-          <button
-            disabled={!addEmployee || employees.length > 4}
-            onClick={async () => {
-              if (addEmployee) {
-                const result = await fetch("http://127.0.0.2:3001/addEmployee", {
-                  method: "post",
-                  headers: { "Content-Type": "text/plain" },
-                  body: addEmployee,
-                });
-                const text = await result.text();
-                setAddEmployee("");
-                setNeedsUpdate((u) => !u);
-                console.log(text);
-              }
-            }}
-          >
-            Add
-          </button>
-        </span>
-        {employees.length
-          ? employees.map((employee) => (
-              <div>
-                <b>
-                  <i>{employee}</i>
-                </b>
-                <button
-                  onClick={async () => {
-                    setSelected(employee);
-                    setShowModal(true);
-                  }}
-                >
-                  Delete Employee
-                </button>
-              </div>
-            ))
-          : "No employees found"}
-        <br />
-        <br />
-        <button
-          onClick={() => {
-            setAdminLoggedIn(false);
-            setAdminLoginView(false);
-            window.history.pushState(null, "", "/");
-          }}
-        >
-          Go Back To Calendar
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const StyledAdminLoggedIn = styled(AdminLoggedIn)`
-  height: 100vh;
-  width: 100vw;
+const RowItem = styled.div`
+  // border: 1px solid green;
+  width: 80%;
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
-
-  h2 {
-    width: 10em;
-  }
-
-  .group-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    margin: 3em;
-    height: 30em;
-    width: 18em;
-    border: 1px solid black;
-  }
-
-  button {
-    margin: 1em 1em 0em;
-  }
+  justify-content: space-between;
 `;
 
-const Wrapper = styled.div`
-  height: 100vh;
-  width: 100vw;
-  background-color: rgb(244, 244, 244);
+const StyleGuideButton = styled.button`
+  color: white;
+  height: 3em;
+  width: 3em;
+  border-radius: 32px;
+  background-color: ${colors.coolBlue};
+  position: absolute;
+  z-index: 50;
+  bottom: 10%;
+  right: 10%;
+`;
+
+const StyledLogo = styled.img`
+  width: 14em;
+  height: 14em;
+`;
+
+const Header = styled.div``;
+
+const Content = styled.div``;
+
+const Footer = styled.div`
+  position: absolute;
+  background-color: ${colors.floor};
+  color: black;
+  bottom: 0px;
+  width: 100%;
+  height: 2em;
   display: grid;
   place-items: center;
 `;
-
-const DayButton = styled.button<{ selected: boolean }>`
-  background-color: ${(props) => (props.selected ? "white" : "rgb(222,222,222)")};
-  height: 3em;
-  width: 6em;
-
-  position: relative;
-  top: 2px;
-
-  box-sizing: content-box;
-
-  border-bottom: 1px solid ${(props) => (props.selected ? "white" : "black")};
-  border-radius: 8px 8px 0px 0px;
-
-  &:hover {
-    cursor: pointer;
-  }
-`;
-
-const EmployeeButton = styled.button<{ selected: boolean }>`
-  background-color: ${(props) => (props.selected ? "white" : "rgb(222,222,222)")};
-  height: 3em;
-  width: 6em;
-
-  margin: 1em 0em 1em 1em;
-
-  border-radius: 8px;
-  box-shadow: black 1px 1px 1px;
-
-  &:hover {
-    cursor: pointer;
-  }
-`;
-
-const DayButtonContainer = styled.div`
-  display: flex;
-  align-self: flex-start;
-  flex-direction: row;
-`;
-
-const EmployeeContainer = styled.div`
-  display: flex;
-  align-self: flex-start;
-  flex-direction: row;
-`;
-
-const CalendarContainer = styled.div`
-  background-color: white;
-  border: 2px solid black;
-  box-shadow: 4px 4px 6px rgba(100, 100, 100, 0.5);
-
-  border-radius: 0px 8px 8px 8px;
-  width: 33vw;
-  height: 50vh;
-`;
-
-const WidgetContainer = styled.div`
-  padding: 2em;
-  display: flex;
-  flex-direction: column;
-`;
-
-function TimeContainer() {
-  return <></>;
-}
-
-const day = ["Today", "Tomorrow"];
-
-function Calendar({
-  employees,
-  selectedBarber,
-  setSelectedBarber,
-  selectedDay,
-  setSelectedDay,
-}: {
-  employees: string[];
-  selectedBarber: string;
-  setSelectedBarber: (c: string) => void;
-  selectedDay: string;
-  setSelectedDay: (c: string) => void;
-}) {
-  return (
-    <Wrapper>
-      <WidgetContainer>
-        <DayButtonContainer>
-          {day.map((day) => (
-            <DayButton onClick={() => setSelectedDay(day)} selected={selectedDay === day}>
-              {day}
-            </DayButton>
-          ))}
-        </DayButtonContainer>
-
-        <CalendarContainer>
-          <EmployeeContainer>
-            {employees.map((employee) => (
-              <EmployeeButton
-                onClick={() => setSelectedBarber(employee)}
-                selected={selectedBarber === employee}
-              >
-                {employee}
-              </EmployeeButton>
-            ))}
-          </EmployeeContainer>
-          <TimeContainer></TimeContainer>
-        </CalendarContainer>
-      </WidgetContainer>
-    </Wrapper>
-  );
-}
 
 function App() {
   const [selectedBarber, setSelectedBarber] = useState("Mitch");
@@ -478,6 +80,7 @@ function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
   const [adminLoginView, setAdminLoginView] = useState(false);
+  const [showColors, setShowColors] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -521,13 +124,43 @@ function App() {
   }
 
   return (
-    <Calendar
-      selectedBarber={selectedBarber}
-      setSelectedBarber={setSelectedBarber}
-      employees={employees}
-      selectedDay={selectedDay}
-      setSelectedDay={setSelectedDay}
-    />
+    <>
+      <ColorsContainer show={showColors}>
+        <div>Colors</div>
+        <RowItem>
+          Hot Red:{"  "} <Circle color={"#ee1045"} />
+        </RowItem>
+        <RowItem>
+          Rustic Red:{"  "} <Circle color={"#dd221b"} />
+        </RowItem>
+        <RowItem>
+          Mil Green:{"  "} <Circle color={"#c8c7b5"} />
+        </RowItem>
+        <RowItem>
+          Cool Blue:{"  "} <Circle color={"#03a1fb"} />
+        </RowItem>
+        <RowItem>
+          Chair Blue:{"  "} <Circle color={"#87b5e3"} />
+        </RowItem>
+        <RowItem>
+          Floor:{"  "} <Circle color={"#af8f71"} />
+        </RowItem>
+      </ColorsContainer>
+      <Header>
+        <StyledLogo src={"main-logo.jpg"} alt={"Jefferson Street Barber Shop"}></StyledLogo>
+      </Header>
+      <Content>
+        <Calendar
+          selectedBarber={selectedBarber}
+          setSelectedBarber={setSelectedBarber}
+          employees={employees}
+          selectedDay={selectedDay}
+          setSelectedDay={setSelectedDay}
+        />
+      </Content>
+      <Footer>Footer Content</Footer>
+      <StyleGuideButton onClick={() => setShowColors((c) => !c)} />
+    </>
   );
 }
 
