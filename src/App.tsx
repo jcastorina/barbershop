@@ -57,7 +57,9 @@ const StyledLogo = styled.img`
   height: 14em;
 `;
 
-const Header = styled.div``;
+const Header = styled.div`
+  margin: 0;
+`;
 
 const Content = styled.div``;
 
@@ -74,7 +76,7 @@ const Footer = styled.div`
 
 function App() {
   const [selectedBarber, setSelectedBarber] = useState("Mitch");
-  const [selectedDay, setSelectedDay] = useState("Today");
+  const [selectedDay, setSelectedDay] = useState(0);
   const [employees, setEmployees] = useState([]);
   const [needsUpdate, setNeedsUpdate] = useState(false);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
@@ -149,6 +151,7 @@ function App() {
       <Header>
         <StyledLogo src={"main-logo.jpg"} alt={"Jefferson Street Barber Shop"}></StyledLogo>
       </Header>
+
       <Content>
         <Calendar
           selectedBarber={selectedBarber}
