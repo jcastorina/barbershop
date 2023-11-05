@@ -112,12 +112,10 @@ export const StyledAdminLoginView = styled(AdminLoginView)`
 function Modal({
   employee,
   setShowModal,
-  setNeedsUpdate,
   className,
 }: {
   employee: string;
   setShowModal: (u: boolean) => void;
-  setNeedsUpdate: (u: (c: boolean) => boolean) => void;
   className?: string;
 }) {
   return (
@@ -140,7 +138,6 @@ function Modal({
               console.log("No employee found!");
             } finally {
               console.log("trying to update in finally block");
-              setNeedsUpdate((u) => !u);
               setShowModal(false);
             }
           }}
@@ -205,14 +202,13 @@ const hours = ((start, end) => {
 function AdminLoggedIn({
   setAdminLoggedIn,
   setAdminLoginView,
-  employees,
-  setNeedsUpdate,
+  // setNeedsUpdate,
   className,
 }: {
   setAdminLoggedIn: (u: boolean) => void;
   setAdminLoginView: (u: boolean) => void;
-  employees: string[];
-  setNeedsUpdate: (c: (u: boolean) => boolean) => void;
+  // employees: string[];
+  // setNeedsUpdate: (c: (u: boolean) => boolean) => void;
   className?: string;
 }) {
   const [showModal, setShowModal] = useState(false);
@@ -220,19 +216,26 @@ function AdminLoggedIn({
   const [selected, setSelected] = useState("");
   const [selectedStartHour, setSelectedStartHour] = useState(hours[0]);
   const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
+  const [employees, setEmployees] = useState(["Mitch"]);
 
   console.log(selectedStartHour, selectedEndHour);
+
+  useEffect(() => {
+    (async () => {
+      const result = await fetch("http://127.0.0.1:3001/employees");
+      const text = await result.text();
+      const employees = JSON.parse(text);
+      if (typeof employees === "object") {
+        setEmployees(employees);
+      }
+    })();
+  }, []);
 
   return (
     <div className={className}>
       <Fog show={showModal} />
       {showModal && (
-        <StyledModal
-          employee={selected}
-          show={showModal}
-          setShowModal={setShowModal}
-          setNeedsUpdate={setNeedsUpdate}
-        />
+        <StyledModal employee={selected} show={showModal} setShowModal={setShowModal} />
       )}
       <div className="group-container">
         <h2>Times</h2>
@@ -284,7 +287,6 @@ function AdminLoggedIn({
                 });
                 const text = await result.text();
                 setAddEmployee("");
-                setNeedsUpdate((u) => !u);
                 console.log(text);
               }
             }}
