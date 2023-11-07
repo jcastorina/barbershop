@@ -11,10 +11,13 @@ const StyledLogo = styled.img`
 `;
 
 const Header = styled.div`
-  margin: 0;
+  //  margin: 0//
+  margin-bottom: 2em;
 `;
 
-const Content = styled.div``;
+const Content = styled.div`
+  margin-left: 1em;
+`;
 
 const Footer = styled.div`
   position: absolute;
@@ -25,6 +28,10 @@ const Footer = styled.div`
   height: 2em;
   display: grid;
   place-items: center;
+`;
+
+const MakeAnAppointment = styled.h2`
+  margin-bottom: 2em;
 `;
 
 function App() {
@@ -70,7 +77,7 @@ function App() {
       </Header>
 
       <Content>
-        <h2>Make an appointment!</h2>
+        <MakeAnAppointment>Make an appointment!</MakeAnAppointment>
         <ScheduleForm />
       </Content>
       <Footer>Footer Content</Footer>
