@@ -45,15 +45,15 @@ const Days = ({
   setDay,
   className,
 }: {
-  days: string[];
-  setDay: (day: string) => void;
+  days: IDays[];
+  setDay: (day: IDays) => void;
   className?: string;
 }) => {
   return (
     <StyledDiv className={className}>
       <select
         onChange={(e) => {
-          setDay(e.target.value);
+          setDay(e.target.value as IDays);
         }}
       >
         {days.map((day) => (
@@ -70,7 +70,7 @@ const Time = ({
   className,
 }: {
   times: string[];
-  setTime: (day: string) => void;
+  setTime: (time: string) => void;
   className?: string;
 }) => {
   return (
@@ -149,41 +149,71 @@ const Confirm = styled.button`
   align-self: flex-start;
   padding: 1em 1.6em;
 `;
+type IDays = "Today" | "Tomorrow";
 
-const days = ["Today", "Tomorrow"];
-const times = ["10:00", "10:30", "11:00"];
+type ITimesObject = {
+  [key in IDays]: string[];
+};
 
 export function ScheduleForm() {
   const [barber, setBarber] = useState("Mitch");
-  const [day, setDay] = useState(days[0]);
-  const [time, setTime] = useState(days[0]);
+  const [day, setDay] = useState<IDays>("Today");
+  const [days, setDays] = useState<IDays[]>(["Today", "Tomorrow"]);
+  const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [times, setTimes] = useState<ITimesObject | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  console.log(day, time, barber, name, phone);
+  useEffect(() => {
+    (async () => {
+      try {
+        const result = await fetch(`${process.env.REACT_APP_URL}/times`);
+        const timesObject = (await result.json()) as ITimesObject;
+
+        setTimes(timesObject);
+
+        setIsLoading(false);
+      } catch (e) {
+        setHasError(true);
+      }
+    })();
+  }, []);
+
   return (
     <Column>
       <FormWrapper>
-        <StartColumn marginTop={0.5}>
-          {["Name", "Phone #", "Day", "Time"].map((item) => (
-            <StyledDiv>{item}</StyledDiv>
-          ))}
-        </StartColumn>
-        <StartColumn>
-          <StyledName setName={setName} />
-          <StyledPhoneNumber setPhone={setPhone} />
-          <StyledDays setDay={setDay} days={days} />
-          <StyledTime setTime={setTime} times={times} />
-          <StyledDiv>
-            <Confirm
-              onClick={async () => {
-                console.log(process.env, "process");
-              }}
-            >
-              Confirm
-            </Confirm>
-          </StyledDiv>
-        </StartColumn>
+        {isLoading && <>Loading</>}
+        {!isLoading && (
+          <>
+            <StartColumn marginTop={0.5}>
+              {["Name", "Phone #", "Day", "Time"].map((item) => (
+                <StyledDiv>{item}</StyledDiv>
+              ))}
+            </StartColumn>
+            <StartColumn>
+              <StyledName setName={setName} />
+              <StyledPhoneNumber setPhone={setPhone} />
+              {days && (
+                <StyledDays setDay={setDay} days={Object.keys(times!) as unknown as IDays[]} />
+              )}
+              {times && <StyledTime setTime={setTime} times={times[day]} />}
+              <StyledDiv>
+                <Confirm
+                  onClick={async () => {
+                    await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
+                      method: "post",
+                      body: JSON.stringify({ day, time, barber, name, phone }),
+                    });
+                  }}
+                >
+                  Confirm
+                </Confirm>
+              </StyledDiv>
+            </StartColumn>
+          </>
+        )}
       </FormWrapper>
     </Column>
   );

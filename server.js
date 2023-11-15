@@ -75,9 +75,73 @@ app.post("/loginAdmin", (req, res) => {
   return res.end();
 });
 
-app.post("/newAppointment", (req, res) => {
-  console.log(req.body, "req body for new appointment");
+const makeHours = (start, hours) => {
+  if (typeof start === "number" && typeof hours === "number") {
+    let a = [];
 
+    for (let i = 0; i < hours; i++) {
+      for (let j = 0; j < 2; j++) {
+        let offset = start + i;
+        let str = `${offset > 12 ? offset - 12 : offset}:${j === 0 ? "00" : "30"} ${
+          offset > 12 ? "PM" : "AM"
+        }`;
+        a.push(str);
+      }
+    }
+
+    return a;
+  }
+
+  return null;
+};
+
+const appts = {
+  Today: makeHours(9, 8),
+  Tomorrow: makeHours(9, 8),
+};
+
+app.get("/times", (req, res) => {
+  res.write(JSON.stringify(appts));
+  return res.end();
+});
+
+app.post("/newAppointment", (req, res) => {
+  const result = JSON.parse(req.body);
+
+  const { day, time, barber, name, phone } = result;
+
+  const validation = {
+    name: 0,
+    phone: 0,
+    day: 0,
+    time: 0,
+    barber: 0,
+  };
+
+  // need to make sure appt is available too
+
+  if (day) validation.day = 1;
+  if (time) validation.time = 1;
+  if (barber) validation.barber = 1;
+  if (name) validation.name = 1;
+  if (phone) validation.phone = 1;
+
+  const list = appts[day];
+  const avail = list.includes(time);
+  if (avail) {
+    const idx = list.indexOf(time);
+
+    if (idx === 0) {
+      list.shift();
+      appts[day] = list;
+    } else {
+      const newa = [...list.slice(0, idx), ...list.slice(idx + 1, list.length)];
+      console.log(newa, idx, "newa");
+      appts[day] = newa;
+    }
+  }
+
+  res.write(JSON.stringify(validation));
   res.status(200);
   return res.end();
 });
