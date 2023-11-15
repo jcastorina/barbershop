@@ -1,29 +1,42 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { SyntaxKind } from "typescript";
+
+const selectorFontSize = "1em";
+const inputFontSize = "1.05em";
+const marginBottom = "1.25em";
+const elementHeight = "5em";
 
 const Column = styled.div`
-  //background-color: white;
   display: flex;
   flex-direction: column;
-  //  width: 20em;
 `;
 
 const FormWrapper = styled.div`
   background-color: white;
   display: flex;
   flex-direction: row;
-  width: 20em;
+  padding-top: 1em;
 `;
 
 const StyledDiv = styled.div`
-  margin-bottom: 1em;
   margin-left: 1em;
-  height: 3em;
+  height: ${elementHeight};
   font-weight: bold;
 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  input {
+    height: 2em;
+  }
+
   select {
-    display: flex;
+    font-size: ${selectorFontSize};
+    height: 4em;
+    width: 14em;
+    padding: 0.6em 1em;
+    margin: 0.2em;
   }
 `;
 
@@ -98,41 +111,35 @@ const PhoneNumber = ({
 };
 
 const StyledDays = styled(Days)`
-  margin-bottom: 1em;
-
-  select {
-    width: 14em;
+  option {
+    font-size: ${selectorFontSize};
     padding: 0.6em 1em;
   }
 `;
 const StyledTime = styled(Time)`
-  margin-bottom: 1em;
-
-  select {
-    width: 14em;
-    padding: 0.6em 1em;
+  option {
+    font-size: ${selectorFontSize};
   }
 `;
 
 const StyledName = styled(Name)`
-  margin-bottom: 1em;
-
   input {
+    margin-top: 0.2em;
+    font-size: ${inputFontSize};
     width: 14em;
     padding: 0.6em 1em;
   }
 `;
 
 const StyledPhoneNumber = styled(PhoneNumber)`
-  margin-bottom: 1em;
-
   input {
+    font-size: ${inputFontSize};
     width: 14em;
     padding: 0.6em 1em;
   }
 `;
 
-const StartColumn = styled.div`
+const StartColumn = styled.div<{ marginTop?: number }>`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -141,7 +148,6 @@ const StartColumn = styled.div`
 const Confirm = styled.button`
   align-self: flex-start;
   padding: 1em 1.6em;
-  margin-top: 0.6em;
 `;
 
 const days = ["Today", "Tomorrow"];
@@ -153,12 +159,12 @@ export function ScheduleForm() {
   const [time, setTime] = useState(days[0]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  // const [employees, setEmployees] = useState([]);
+
   console.log(day, time, barber, name, phone);
   return (
     <Column>
       <FormWrapper>
-        <StartColumn>
+        <StartColumn marginTop={0.5}>
           {["Name", "Phone #", "Day", "Time"].map((item) => (
             <StyledDiv>{item}</StyledDiv>
           ))}
@@ -169,7 +175,13 @@ export function ScheduleForm() {
           <StyledDays setDay={setDay} days={days} />
           <StyledTime setTime={setTime} times={times} />
           <StyledDiv>
-            <Confirm>Confirm</Confirm>
+            <Confirm
+              onClick={async () => {
+                console.log(process.env, "process");
+              }}
+            >
+              Confirm
+            </Confirm>
           </StyledDiv>
         </StartColumn>
       </FormWrapper>

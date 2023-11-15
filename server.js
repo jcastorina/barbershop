@@ -74,3 +74,10 @@ app.post("/loginAdmin", (req, res) => {
   res.status(401);
   return res.end();
 });
+
+app.post("/newAppointment", (req, res) => {
+  console.log(req.body, "req body for new appointment");
+
+  res.status(200);
+  return res.end();
+});
