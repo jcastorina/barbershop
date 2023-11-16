@@ -3,16 +3,14 @@ import styled from "styled-components";
 
 import { StyledAdminLoggedIn, StyledAdminLoginView } from "./Admin";
 import { ScheduleForm } from "./ScheduleForm";
-import { GuideButton, Colors, colors } from "./utilities";
+import { colors } from "./utilities";
 
 const AppView = styled.div`
-  //  height: 100%;
-  /* width: 100vw;
-  min-width: 32em; */
-
   box-sizing: content-box;
 
-  // position: relative;
+  overflow: scroll;
+
+  height: 100vh;
 `;
 
 const StyledLogo = styled.img`
@@ -21,7 +19,6 @@ const StyledLogo = styled.img`
 `;
 
 const Header = styled.div`
-  // margin: 0;
   margin-bottom: 2em;
 `;
 
