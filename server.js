@@ -83,7 +83,7 @@ const makeHours = (start, hours) => {
       for (let j = 0; j < 2; j++) {
         let offset = start + i;
         let str = `${offset > 12 ? offset - 12 : offset}:${j === 0 ? "00" : "30"} ${
-          offset > 12 ? "PM" : "AM"
+          offset >= 12 ? "PM" : "AM"
         }`;
         a.push(str);
       }
@@ -95,13 +95,30 @@ const makeHours = (start, hours) => {
   return null;
 };
 
+const blankSched = {
+  name: "",
+  day: "",
+  time: "",
+  barber: "",
+};
+
+const buildSchedArray = () => {
+  const hours = makeHours(9, 8);
+
+  return hours.map((time) => ({ ...blankSched, time }));
+};
+
 const appts = {
-  Today: makeHours(9, 8),
-  Tomorrow: makeHours(9, 8),
+  Today: buildSchedArray(),
+  Tomorrow: buildSchedArray(),
 };
 
 app.get("/times", (req, res) => {
-  res.write(JSON.stringify(appts));
+  const formattedTimes = {
+    Today: appts.Today.map((item) => item.time),
+    Tomorrow: appts.Tomorrow.map((item) => item.time),
+  };
+  res.write(JSON.stringify(formattedTimes));
   return res.end();
 });
 
@@ -136,7 +153,6 @@ app.post("/newAppointment", (req, res) => {
       appts[day] = list;
     } else {
       const newa = [...list.slice(0, idx), ...list.slice(idx + 1, list.length)];
-      console.log(newa, idx, "newa");
       appts[day] = newa;
     }
   }

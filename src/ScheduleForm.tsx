@@ -2,10 +2,38 @@ import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 import { colors } from "./utilities";
-import { start } from "repl";
+const Anchor = styled.a`
+  //  padding: 1.5em 2.4em;
+
+  background-color: ${colors.coolBlue};
+
+  font-size: 1em;
+
+  color: white;
+
+  border: none;
+
+  margin: 1em;
+
+  text-decoration: none;
+
+  border-radius: 2px;
+
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    cursor: pointer;
+    background-color: ${colors.chairBlue};
+  }
+
+  @media (max-width: 768px) {
+    width: 80%;
+  }
+`;
 
 const selectorFontSize = "1em";
-const inputFontSize = "1.05em";
+const inputFontSize = 1.05;
 const marginBottom = "1.25em";
 const elementHeight = "5em";
 
@@ -15,41 +43,9 @@ const Column = styled.div`
 `;
 
 const FormWrapper = styled.div`
-  background-color: white;
   display: flex;
   flex-direction: row;
-  padding-top: 1em;
-`;
-
-const StyledDiv = styled.div`
-  margin-left: 1em;
-  height: ${elementHeight};
-  font-weight: bold;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  input {
-    height: 2em;
-  }
-
-  select {
-    font-size: ${selectorFontSize};
-    height: 4em;
-    width: 14em;
-
-    padding: 0.6em 1em;
-    margin: 0.2em;
-
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    option {
-      color: pink;
-    }
-  }
+  // padding-top: 1em;
 `;
 
 const RowContainer = styled.div`
@@ -70,23 +66,25 @@ const IconContainer = styled.div`
 `;
 
 const SelectedIcon = styled.div<{ show: boolean; size: number }>`
-  display: ${(props) => (props.show ? "block" : "none")};
+  //  display: ${(props) => (props.show ? "block" : "none")};
 
   border-radius: 32px;
 
-  width: ${(props) => (props.show ? "1em" : "0.5em")};
-  height: ${(props) => (props.show ? "1em" : "0.5em")};
+  width: ${(props) => (props.show ? "1em" : "0em")};
+  height: ${(props) => (props.show ? "1em" : "0em")};
 
-  transition: width 1s ease-in, height 1s ease-in;
+  transition: width 0.1s ease-in, height 0.1s ease-in;
 
   background-color: ${colors.coolBlue};
 `;
 
 const TextContainer = styled.span``;
 
+let duration = 0.1;
+
 const TimeBox = styled.div<{ show: boolean }>`
   overflow-y: scroll;
-  height: 80%;
+  height: ${(props) => (props.show ? "80%" : "0")};
   position: absolute;
   top: 50%;
   left: 50%;
@@ -94,19 +92,20 @@ const TimeBox = styled.div<{ show: boolean }>`
   display: flex;
   flex-direction: column;
 
-  padding: 1em 0em;
+  padding: ${(props) => (props.show ? "1em 0em" : "0")};
 
   background-color: white;
 
   font-size: 1.5em;
-  border: 1px solid black;
-  border-radius: 5px;
+  border: ${(props) => (props.show ? "1px solid black" : "0px solid black")};
+  border-radius: 10px;
 
   opacity: ${(props) => (props.show ? 1 : 0)};
 
-  transition: opacity 0.1s ease-in;
+  transition: opacity ${duration}s ease-in-out;
+  transition: height ${duration}s ease-in, padding ${duration}s ease-in, border ${duration}s ease-in;
 
-  z-index: ${(props) => (props.show ? 1000 : -1)};
+  // z-index: ${(props) => (props.show ? 1000 : -1)};
 
   &::-webkit-scrollbar {
     -webkit-appearance: none;
@@ -142,9 +141,9 @@ const TimeBox = styled.div<{ show: boolean }>`
   }
 `;
 
-const delay = (ms: number, cb: () => void) => setInterval(cb, ms);
+const StyledLabel = styled.label``;
 
-let _count = 0;
+const delay = (ms: number, cb: () => void) => setTimeout(cb, ms);
 
 const MySelector = ({
   time,
@@ -179,25 +178,17 @@ const MySelector = ({
   useEffect(() => {
     if (!startAnimation) return;
 
-    const handler = delay(16, () => {
-      _count++;
-      setCount(_count);
+    const handler = delay(120, () => {
+      setShow(false);
+      setStartAnimation(false);
     });
 
-    if (_count >= 15) {
-      clearInterval(handler);
-      _count = 0;
-      setCount(0);
-      setStartAnimation(false);
-    }
-
     return () => clearInterval(handler);
-  }, [startAnimation, count]);
+  }, [startAnimation]);
 
-  console.log(count);
   return (
     <div className={className}>
-      <TimeBox ref={timeBoxRef} show={show}>
+      {/* <TimeBox ref={timeBoxRef} show={show}>
         {times.map((_time) => {
           return (
             <RowContainer
@@ -213,28 +204,61 @@ const MySelector = ({
             </RowContainer>
           );
         })}
-      </TimeBox>
-      <button
-        onClick={() => {
-          setShow((show) => !show);
-        }}
+      </TimeBox> */}
+      <StyledLabel>Time</StyledLabel>
+      <select
+      // onClick={() => {
+      //   setShow((show) => !show);
+      // }}
       >
-        {time}
-      </button>
+        {times.map((time) => (
+          <option>{time}</option>
+        ))}
+      </select>
     </div>
   );
 };
 
 const StyledTime = styled(MySelector)`
   margin-left: 1em;
+  margin-bottom: 1em;
+  // border: 1px solid black;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
+
+  &:focus {
+    border: 1px solid ${colors.coolBlue};
+  }
+
+  &:active {
+    border: 1px solid ${colors.coolBlue};
+  }
+
+  select {
+    overflow: scroll;
+
+    width: 12em;
+    padding: 1em;
+
+    cursor: pointer;
+  }
+
+  option {
+    overflow: scroll;
+    width: 12em;
+
+    padding: 5em;
+
+    margin: 5em;
+  }
+
   button {
     background-color: white;
-
-    border: 1px solid black;
-    border-radius: 2px;
-
+    border: none;
     font-size: ${selectorFontSize};
-    height: 4em;
+    height: 3.5em;
     width: 14em;
     max-width: 90vh;
     padding: 0.6em 1em;
@@ -246,9 +270,13 @@ const StyledTime = styled(MySelector)`
 
     padding-left: 1.5em;
 
-    &:focus {
+    /* &:focus {
       border: 1px solid ${colors.coolBlue};
     }
+
+    &:active {
+      border: 1px solid ${colors.coolBlue};
+    } */
   }
 `;
 
@@ -262,7 +290,8 @@ const Days = ({
   className?: string;
 }) => {
   return (
-    <StyledDiv className={className}>
+    <div className={className}>
+      <StyledLabel>Day</StyledLabel>
       <select
         onChange={(e) => {
           setDay(e.target.value as IDays);
@@ -272,15 +301,16 @@ const Days = ({
           <option value={day}>{day}</option>
         ))}
       </select>
-    </StyledDiv>
+    </div>
   );
 };
 
 const Name = ({ setName, className }: { setName: (name: string) => void; className?: string }) => {
   return (
-    <StyledDiv className={className}>
-      <input onChange={(e) => setName(e.target.value)} />
-    </StyledDiv>
+    <div className={className}>
+      <StyledLabel>Name</StyledLabel>
+      <input placeholder={"e.g. John Smith"} onChange={(e) => setName(e.target.value)} />
+    </div>
   );
 };
 
@@ -292,13 +322,39 @@ const PhoneNumber = ({
   className?: string;
 }) => {
   return (
-    <StyledDiv className={className}>
-      <input onChange={(e) => setPhone(e.target.value)}></input>
-    </StyledDiv>
+    <div className={className}>
+      <StyledLabel>Phone Number</StyledLabel>
+      <input placeholder={"Phone #"} onChange={(e) => setPhone(e.target.value)}></input>
+    </div>
   );
 };
 
 const StyledDays = styled(Days)`
+  margin-left: 1em;
+  margin-bottom: 1em;
+  // border: 1px solid black;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
+
+  &:focus {
+    border: 1px solid ${colors.coolBlue};
+  }
+
+  &:active {
+    border: 1px solid ${colors.coolBlue};
+  }
+
+  select {
+    overflow: scroll;
+
+    width: 12em;
+    padding: 1em;
+
+    cursor: pointer;
+  }
+
   option {
     font-size: ${selectorFontSize};
     padding: 0.6em 1em;
@@ -306,19 +362,45 @@ const StyledDays = styled(Days)`
 `;
 
 const StyledName = styled(Name)`
+  margin-left: 1em;
+  margin-bottom: 1em;
+  // border: 1px solid black;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
   input {
-    margin-top: 0.2em;
-    font-size: ${inputFontSize};
+    font-size: ${inputFontSize}em;
+
+    // margin-top: 0.2em;
     width: 14em;
-    padding: 0.6em 1em;
+    padding: 0.8em;
+  }
+
+  input::placeholder {
+    font-size: ${inputFontSize * 0.8}em;
   }
 `;
 
 const StyledPhoneNumber = styled(PhoneNumber)`
+  margin-left: 1em;
+  margin-bottom: 1em;
+  // border: 1px solid black;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
+
   input {
-    font-size: ${inputFontSize};
+    font-size: ${inputFontSize}em;
+
+    // margin-top: 0.2em;
     width: 14em;
-    padding: 0.6em 1em;
+    padding: 0.8em;
+  }
+
+  input::placeholder {
+    font-size: ${inputFontSize * 0.8}em;
   }
 `;
 
@@ -326,19 +408,44 @@ const StartColumn = styled.div<{ marginTop?: number }>`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+
+  height: 40vh;
+
+  justify-content: space-between;
 `;
 
-const Confirm = styled.button`
-  align-self: flex-start;
-  padding: 1em 1.6em;
+const Confirm = styled(Anchor)`
+  align-self: center;
+  padding: 0.7em;
+
+  min-width: 50%;
+
+  &:hover {
+    cursor: pointer;
+  }
 `;
+
+const StyledCancel = styled.div`
+  align-self: center;
+  padding: 0.7em;
+  &:hover {
+    cursor: pointer;
+  }
+`;
+
 type IDays = "Today" | "Tomorrow";
 
 type ITimesObject = {
   [key in IDays]: string[];
 };
 
-export function ScheduleForm() {
+export function ScheduleForm({
+  showForm,
+  setShowForm,
+}: {
+  showForm: boolean;
+  setShowForm: (show: boolean) => void;
+}) {
   const [barber, setBarber] = useState("Mitch");
   const [day, setDay] = useState<IDays>("Today");
   const [days, setDays] = useState<IDays[] | null>(null);
@@ -350,6 +457,7 @@ export function ScheduleForm() {
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    setIsLoading(true);
     (async () => {
       try {
         const result = await fetch(`${process.env.REACT_APP_URL}/times`);
@@ -358,31 +466,32 @@ export function ScheduleForm() {
 
         setDays(dayss as IDays[]);
         setTimes(timesObject);
-
-        setIsLoading(false);
       } catch (e) {
         setHasError(true);
+      } finally {
+        console.log(isLoading, "isloading in useeffect");
+        setIsLoading(false);
       }
     })();
-  }, []);
+  }, [showForm]);
 
   useEffect(() => {
     if (!times) return;
 
     setTime(times[day][0]);
   }, [times, day]);
-
+  console.log(isLoading, "isLoading");
   return (
     <Column>
       <FormWrapper>
         {isLoading && <>{isLoading}</>}
         {!isLoading && (
           <>
-            <StartColumn marginTop={0.5}>
+            {/* <StartColumn marginTop={0.5}>
               {["Name", "Phone #", "Day", "Time"].map((item) => (
-                <StyledDiv>{item}</StyledDiv>
+                <div>{item}</div>
               ))}
-            </StartColumn>
+            </StartColumn> */}
             <StartColumn>
               <StyledName setName={setName} />
               <StyledPhoneNumber setPhone={setPhone} />
@@ -390,18 +499,18 @@ export function ScheduleForm() {
                 <StyledDays setDay={setDay} days={Object.keys(times!) as unknown as IDays[]} />
               )}
               {times && time && <StyledTime time={time} setTime={setTime} times={times[day]} />}
-              <StyledDiv>
-                <Confirm
-                  onClick={async () => {
-                    await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
-                      method: "post",
-                      body: JSON.stringify({ day, time, barber, name, phone }),
-                    });
-                  }}
-                >
-                  Confirm
-                </Confirm>
-              </StyledDiv>
+
+              <Confirm
+                onClick={async () => {
+                  await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
+                    method: "post",
+                    body: JSON.stringify({ day, time, barber, name, phone }),
+                  }).finally(() => setShowForm(false));
+                }}
+              >
+                Confirm
+              </Confirm>
+              <StyledCancel onClick={() => setShowForm(false)}>Cancel</StyledCancel>
             </StartColumn>
           </>
         )}

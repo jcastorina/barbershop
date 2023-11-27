@@ -218,8 +218,6 @@ function AdminLoggedIn({
   const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
   const [employees, setEmployees] = useState(["Mitch"]);
 
-  console.log(selectedStartHour, selectedEndHour);
-
   useEffect(() => {
     (async () => {
       const result = await fetch("http://127.0.0.1:3001/employees");

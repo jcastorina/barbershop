@@ -30,6 +30,11 @@ const ResponsiveWrapper = styled.div`
 
 const Content = styled.div`
   // margin-left: 1em;
+
+  // border: 1px solid pink;
+
+  display: flex;
+  flex-direction: column;
 `;
 
 const Footer = styled.div`
@@ -41,11 +46,66 @@ const Footer = styled.div`
   height: 4em;
   display: grid;
   place-items: center;
+
+  box-shadow: 0px -2px 4px ${colors.milGreen};
   //  min-width: 32em;
 `;
 
-const MakeAnAppointment = styled.h2`
-  // margin-bottom: 2em;
+const Anchor = styled.a`
+  padding: 1.5em 2.4em;
+
+  background-color: ${colors.coolBlue};
+
+  font-size: 1em;
+
+  color: white;
+
+  border: none;
+
+  margin: 1em;
+
+  text-decoration: none;
+
+  border-radius: 2px;
+
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    cursor: pointer;
+    background-color: ${colors.chairBlue};
+  }
+
+  @media (max-width: 768px) {
+    width: 80%;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: center;
+
+    gap: 10px;
+  }
+
+  @media (min-height: 600px) {
+    //margin-top: 40em;
+    height: 24em;
+    align-self: center;
+
+    // flex-direction: column;
+    justify-content: center;
+    // border: 1px solid pink;
+  }
+
+  /* @media (max-width: 768px) {
+    justify-content: center;
+  } */
 `;
 
 function App() {
@@ -54,34 +114,9 @@ function App() {
   const [password, setPassword] = useState("");
   const [adminLoginView, setAdminLoginView] = useState(false);
   const [showColors, setShowColors] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    const pathname = window.location.pathname;
-
-    if (pathname === "/admin") {
-      setAdminLoginView(true);
-    }
-  }, []);
-
-  if (adminLoggedIn) {
-    return (
-      <StyledAdminLoggedIn
-        setAdminLoggedIn={setAdminLoggedIn}
-        setAdminLoginView={setAdminLoginView}
-      />
-    );
-  }
-
-  if (adminLoginView) {
-    return (
-      <StyledAdminLoginView
-        password={password}
-        setPassword={setPassword}
-        setAdminLoggedIn={setAdminLoggedIn}
-        setAdminLoginView={setAdminLoginView}
-      />
-    );
-  }
+  console.log(showForm, "show form");
 
   return (
     <AppView>
@@ -90,11 +125,29 @@ function App() {
       </Header>
       <ResponsiveWrapper>
         <Content>
-          <MakeAnAppointment>Make an appointment!</MakeAnAppointment>
-          <ScheduleForm />
+          {!showForm && (
+            <ButtonContainer>
+              <Anchor href={"tel:+1-612-524-8519"}>CALL NOW</Anchor>
+              <Anchor
+                href={
+                  "https://www.google.com/maps/dir//Jefferson+Street+Barbershop/data=!4m8!4m7!1m0!1m5!1m1!1s0x52b323ea2726a801:0x2a911b3a0c1e3412!2m2!1d-93.2566332!2d45.182939"
+                }
+                target={"_blank"}
+              >
+                GET DIRECTIONS
+              </Anchor>
+              <Anchor
+                onClick={() => {
+                  setShowForm(true);
+                }}
+              >
+                MAKE AN APPOINTMENT!
+              </Anchor>
+            </ButtonContainer>
+          )}
+          {showForm && <ScheduleForm showForm={showForm} setShowForm={setShowForm} />}
         </Content>
       </ResponsiveWrapper>
-
       <Footer>Footer Content</Footer>
     </AppView>
   );
@@ -104,3 +157,31 @@ export default App;
 // <Colors showColors={showColors} />
 // <Footer>Footer Content</Footer>
 // <GuideButton handleClick={() => setShowColors((show) => !show)} />
+
+// useEffect(() => {
+//   const pathname = window.location.pathname;
+
+//   if (pathname === "/admin") {
+//     setAdminLoginView(true);
+//   }
+// }, []);
+
+// if (adminLoggedIn) {
+//   return (
+//     <StyledAdminLoggedIn
+//       setAdminLoggedIn={setAdminLoggedIn}
+//       setAdminLoginView={setAdminLoginView}
+//     />
+//   );
+// }
+
+// if (adminLoginView) {
+//   return (
+//     <StyledAdminLoginView
+//       password={password}
+//       setPassword={setPassword}
+//       setAdminLoggedIn={setAdminLoggedIn}
+//       setAdminLoginView={setAdminLoginView}
+//     />
+//   );
+// }
