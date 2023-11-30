@@ -65,87 +65,13 @@ const IconContainer = styled.div`
   place-items: center;
 `;
 
-const SelectedIcon = styled.div<{ show: boolean; size: number }>`
-  //  display: ${(props) => (props.show ? "block" : "none")};
-
-  border-radius: 32px;
-
-  width: ${(props) => (props.show ? "1em" : "0em")};
-  height: ${(props) => (props.show ? "1em" : "0em")};
-
-  transition: width 0.1s ease-in, height 0.1s ease-in;
-
-  background-color: ${colors.coolBlue};
+const StyledLabel = styled.label`
+  margin-bottom: 0.2em;
 `;
-
-const TextContainer = styled.span``;
-
-let duration = 0.1;
-
-const TimeBox = styled.div<{ show: boolean }>`
-  overflow-y: scroll;
-  height: ${(props) => (props.show ? "80%" : "0")};
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-
-  padding: ${(props) => (props.show ? "1em 0em" : "0")};
-
-  background-color: white;
-
-  font-size: 1.5em;
-  border: ${(props) => (props.show ? "1px solid black" : "0px solid black")};
-  border-radius: 10px;
-
-  opacity: ${(props) => (props.show ? 1 : 0)};
-
-  transition: opacity ${duration}s ease-in-out;
-  transition: height ${duration}s ease-in, padding ${duration}s ease-in, border ${duration}s ease-in;
-
-  // z-index: ${(props) => (props.show ? 1000 : -1)};
-
-  &::-webkit-scrollbar {
-    -webkit-appearance: none;
-    width: 7px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  ${RowContainer} {
-    width: 14em;
-    max-width: 12em;
-
-    background-color: white;
-
-    padding: 0.71em 1em;
-
-    box-sizing: content-box;
-
-    &:hover {
-      background-color: ${colors.chairBlue};
-      cursor: pointer;
-    }
-
-    ${IconContainer} {
-    }
-
-    ${TextContainer} {
-      margin-left: 1em;
-    }
-  }
-`;
-
-const StyledLabel = styled.label``;
 
 const delay = (ms: number, cb: () => void) => setTimeout(cb, ms);
 
-const MySelector = ({
+const Times = ({
   time,
   times,
   setTime,
@@ -188,29 +114,8 @@ const MySelector = ({
 
   return (
     <div className={className}>
-      {/* <TimeBox ref={timeBoxRef} show={show}>
-        {times.map((_time) => {
-          return (
-            <RowContainer
-              onClick={() => {
-                setTime(_time);
-                setStartAnimation(true);
-              }}
-            >
-              <IconContainer>
-                <SelectedIcon show={_time === time} size={count} />
-              </IconContainer>
-              <TextContainer>{_time}</TextContainer>
-            </RowContainer>
-          );
-        })}
-      </TimeBox> */}
       <StyledLabel>Time</StyledLabel>
-      <select
-      // onClick={() => {
-      //   setShow((show) => !show);
-      // }}
-      >
+      <select>
         {times.map((time) => (
           <option>{time}</option>
         ))}
@@ -219,10 +124,9 @@ const MySelector = ({
   );
 };
 
-const StyledTime = styled(MySelector)`
+const StyledTimes = styled(Times)`
   margin-left: 1em;
-  margin-bottom: 1em;
-  // border: 1px solid black;
+  margin-bottom: 1em;k;
   border-radius: 8px;
 
   display: flex;
@@ -269,14 +173,6 @@ const StyledTime = styled(MySelector)`
     align-items: center;
 
     padding-left: 1.5em;
-
-    /* &:focus {
-      border: 1px solid ${colors.coolBlue};
-    }
-
-    &:active {
-      border: 1px solid ${colors.coolBlue};
-    } */
   }
 `;
 
@@ -321,18 +217,92 @@ const PhoneNumber = ({
   setPhone: React.Dispatch<React.SetStateAction<string>>;
   className?: string;
 }) => {
+  const [areaCode, setAreaCode] = useState("");
+  const [prefix, setPrefix] = useState("");
+  const [suffix, setSuffix] = useState("");
+
   return (
     <div className={className}>
       <StyledLabel>Phone Number</StyledLabel>
-      <input placeholder={"Phone #"} onChange={(e) => setPhone(e.target.value)}></input>
+
+      <div className={"phone-row"}>
+        <input
+          className={"phone-area-code"}
+          placeholder={"(555)"}
+          onChange={(e) => setAreaCode(e.target.value)}
+        ></input>
+        <span className={"markup"}>-</span>
+        <input
+          className={"phone-prefix"}
+          placeholder={"555"}
+          onChange={(e) => setPrefix(e.target.value)}
+        ></input>
+        <span className={"markup"}>-</span>
+        <input
+          className={"phone-suffix"}
+          placeholder={"5555"}
+          onChange={(e) => setSuffix(e.target.value)}
+        ></input>
+      </div>
     </div>
   );
 };
 
+const StyledPhoneNumber = styled(PhoneNumber)`
+  margin-left: 1em;
+  margin-bottom: 1em;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
+
+  .phone-row {
+    display: flex;
+    flex-direction: row;
+    width: 20em;
+    align-items: center;
+  }
+
+  .phone-area-code {
+    font-size: ${inputFontSize}em;
+
+    width: 2em;
+    padding: 0.8em;
+  }
+
+  .phone-prefix {
+    font-size: ${inputFontSize}em;
+
+    width: 2em;
+    padding: 0.8em;
+    //margin: 0em 1em;
+  }
+
+  .phone-suffix {
+    font-size: ${inputFontSize}em;
+
+    width: 4em;
+    padding: 0.8em;
+  }
+
+  .markup {
+    font-size: ${inputFontSize}em;
+    font-weight: bold;
+    width: 1.15em;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  input::placeholder {
+    font-size: ${inputFontSize * 0.8}em;
+  }
+`;
+
 const StyledDays = styled(Days)`
   margin-left: 1em;
   margin-bottom: 1em;
-  // border: 1px solid black;
   border-radius: 8px;
 
   display: flex;
@@ -364,33 +334,10 @@ const StyledDays = styled(Days)`
 const StyledName = styled(Name)`
   margin-left: 1em;
   margin-bottom: 1em;
-  // border: 1px solid black;
   border-radius: 8px;
 
   display: flex;
   flex-direction: column;
-  input {
-    font-size: ${inputFontSize}em;
-
-    // margin-top: 0.2em;
-    width: 14em;
-    padding: 0.8em;
-  }
-
-  input::placeholder {
-    font-size: ${inputFontSize * 0.8}em;
-  }
-`;
-
-const StyledPhoneNumber = styled(PhoneNumber)`
-  margin-left: 1em;
-  margin-bottom: 1em;
-  // border: 1px solid black;
-  border-radius: 8px;
-
-  display: flex;
-  flex-direction: column;
-
   input {
     font-size: ${inputFontSize}em;
 
@@ -487,18 +434,13 @@ export function ScheduleForm({
         {isLoading && <>{isLoading}</>}
         {!isLoading && (
           <>
-            {/* <StartColumn marginTop={0.5}>
-              {["Name", "Phone #", "Day", "Time"].map((item) => (
-                <div>{item}</div>
-              ))}
-            </StartColumn> */}
             <StartColumn>
               <StyledName setName={setName} />
               <StyledPhoneNumber setPhone={setPhone} />
               {days && (
                 <StyledDays setDay={setDay} days={Object.keys(times!) as unknown as IDays[]} />
               )}
-              {times && time && <StyledTime time={time} setTime={setTime} times={times[day]} />}
+              {times && time && <StyledTimes time={time} setTime={setTime} times={times[day]} />}
 
               <Confirm
                 onClick={async () => {
