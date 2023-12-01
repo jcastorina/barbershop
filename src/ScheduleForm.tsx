@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
-import { colors } from "./utilities";
+import { colors, isNumeric } from "./utilities";
 const Anchor = styled.a`
   //  padding: 1.5em 2.4em;
 
@@ -46,6 +46,8 @@ const FormWrapper = styled.div`
   display: flex;
   flex-direction: row;
   // padding-top: 1em;
+
+  justify-content: center;
 `;
 
 const RowContainer = styled.div`
@@ -115,38 +117,48 @@ const Times = ({
   return (
     <div className={className}>
       <StyledLabel>Time</StyledLabel>
-      <select>
-        {times.map((time) => (
-          <option>{time}</option>
-        ))}
-      </select>
+      <div className={"select-border-wrapper"}>
+        <select>
+          {times.map((time) => (
+            <option>{time}</option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
 
 const StyledTimes = styled(Times)`
   margin-left: 1em;
-  margin-bottom: 1em;k;
-  border-radius: 8px;
+  margin-bottom: 1em;
 
   display: flex;
   flex-direction: column;
 
-  &:focus {
-    border: 1px solid ${colors.coolBlue};
-  }
-
-  &:active {
-    border: 1px solid ${colors.coolBlue};
+  .select-border-wrapper {
+    display: grid;
+    place-items: center;
+    height: 3em;
+    width: 12em;
   }
 
   select {
     overflow: scroll;
-
+    box-sizing: content-box;
     width: 12em;
     padding: 1em;
 
+    border-radius: 2px;
+
     cursor: pointer;
+
+    &:focus {
+      border: 2px solid black;
+    }
+
+    &:active {
+      border: 2px solid black;
+    }
   }
 
   option {
@@ -188,15 +200,17 @@ const Days = ({
   return (
     <div className={className}>
       <StyledLabel>Day</StyledLabel>
-      <select
-        onChange={(e) => {
-          setDay(e.target.value as IDays);
-        }}
-      >
-        {days.map((day) => (
-          <option value={day}>{day}</option>
-        ))}
-      </select>
+      <div className={"select-border-wrapper"}>
+        <select
+          onChange={(e) => {
+            setDay(e.target.value as IDays);
+          }}
+        >
+          {days.map((day) => (
+            <option value={day}>{day}</option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
@@ -221,27 +235,59 @@ const PhoneNumber = ({
   const [prefix, setPrefix] = useState("");
   const [suffix, setSuffix] = useState("");
 
+  const areaCodeRef = useRef<HTMLInputElement | null>(null);
+  const prefixRef = useRef<HTMLInputElement | null>(null);
+  const suffixRef = useRef<HTMLInputElement | null>(null);
+  console.log(areaCode, prefix, suffix, "phone #");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: string) => void,
+    ref?: React.MutableRefObject<HTMLInputElement | null>
+  ) => {
+    if (isNumeric(e.target.value)) {
+      if (e.target.value.length > 4) {
+        return;
+      }
+      setter(e.target.value);
+      if (ref?.current) {
+        if (e.target.value.length === 3) {
+          return ref.current?.focus(); // Shift focus when area code is 3 digits
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    setPhone(areaCode + prefix + suffix);
+  }, [areaCode, prefix, suffix]);
+
   return (
     <div className={className}>
       <StyledLabel>Phone Number</StyledLabel>
-
       <div className={"phone-row"}>
         <input
+          value={areaCode}
+          ref={areaCodeRef}
           className={"phone-area-code"}
           placeholder={"(555)"}
-          onChange={(e) => setAreaCode(e.target.value)}
+          onChange={(e) => handleChange(e, setAreaCode, prefixRef)}
         ></input>
         <span className={"markup"}>-</span>
         <input
+          value={prefix}
+          ref={prefixRef}
           className={"phone-prefix"}
           placeholder={"555"}
-          onChange={(e) => setPrefix(e.target.value)}
+          onChange={(e) => handleChange(e, setPrefix, suffixRef)}
         ></input>
         <span className={"markup"}>-</span>
         <input
+          value={suffix}
+          ref={suffixRef}
           className={"phone-suffix"}
           placeholder={"5555"}
-          onChange={(e) => setSuffix(e.target.value)}
+          onChange={(e) => handleChange(e, setSuffix)}
         ></input>
       </div>
     </div>
@@ -251,7 +297,6 @@ const PhoneNumber = ({
 const StyledPhoneNumber = styled(PhoneNumber)`
   margin-left: 1em;
   margin-bottom: 1em;
-  border-radius: 8px;
 
   display: flex;
   flex-direction: column;
@@ -275,7 +320,6 @@ const StyledPhoneNumber = styled(PhoneNumber)`
 
     width: 2em;
     padding: 0.8em;
-    //margin: 0em 1em;
   }
 
   .phone-suffix {
@@ -303,26 +347,35 @@ const StyledPhoneNumber = styled(PhoneNumber)`
 const StyledDays = styled(Days)`
   margin-left: 1em;
   margin-bottom: 1em;
-  border-radius: 8px;
 
   display: flex;
   flex-direction: column;
 
-  &:focus {
-    border: 1px solid ${colors.coolBlue};
-  }
-
-  &:active {
-    border: 1px solid ${colors.coolBlue};
+  .select-border-wrapper {
+    height: 3em;
+    width: 12em;
+    display: grid;
+    place-items: center;
   }
 
   select {
     overflow: scroll;
+    box-sizing: content-box;
 
     width: 12em;
     padding: 1em;
 
+    border-radius: 2px;
+
     cursor: pointer;
+
+    &:focus {
+      border: 2px solid black;
+    }
+
+    &:active {
+      border: 2px solid black;
+    }
   }
 
   option {
@@ -334,14 +387,12 @@ const StyledDays = styled(Days)`
 const StyledName = styled(Name)`
   margin-left: 1em;
   margin-bottom: 1em;
-  border-radius: 8px;
 
   display: flex;
   flex-direction: column;
   input {
     font-size: ${inputFontSize}em;
 
-    // margin-top: 0.2em;
     width: 14em;
     padding: 0.8em;
   }
@@ -361,14 +412,44 @@ const StartColumn = styled.div<{ marginTop?: number }>`
   justify-content: space-between;
 `;
 
-const Confirm = styled(Anchor)`
-  align-self: center;
-  padding: 0.7em;
+const Confirm = styled.button`
+  padding: 1em 2em;
 
-  min-width: 50%;
+  background-color: ${colors.coolBlue};
+
+  font-size: 1em;
+
+  color: white;
+
+  border: none;
+
+  margin: 1em;
+
+  text-decoration: none;
+
+  border-radius: 2px;
+
+  display: grid;
+  place-items: center;
+
+  align-self: center;
 
   &:hover {
     cursor: pointer;
+    background-color: ${colors.chairBlue};
+  }
+
+  &:disabled {
+    cursor: default;
+    background-color: ${colors.chairBlue};
+  }
+
+  @media (max-width: 768px) {
+    width: 90%;
+  }
+
+  @media (min-width: 768px) {
+    width: 90%;
   }
 `;
 
@@ -403,6 +484,8 @@ export function ScheduleForm({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
+  const isNotReady = () => !Boolean(phone.length === 10 && name);
+
   useEffect(() => {
     setIsLoading(true);
     (async () => {
@@ -427,34 +510,33 @@ export function ScheduleForm({
 
     setTime(times[day][0]);
   }, [times, day]);
-  console.log(isLoading, "isLoading");
+  // console.log(phone, phone.length, name, name.length, isNotReady(), "phone");
   return (
     <Column>
       <FormWrapper>
         {isLoading && <>{isLoading}</>}
         {!isLoading && (
-          <>
-            <StartColumn>
-              <StyledName setName={setName} />
-              <StyledPhoneNumber setPhone={setPhone} />
-              {days && (
-                <StyledDays setDay={setDay} days={Object.keys(times!) as unknown as IDays[]} />
-              )}
-              {times && time && <StyledTimes time={time} setTime={setTime} times={times[day]} />}
+          <StartColumn>
+            <StyledName setName={setName} />
+            <StyledPhoneNumber setPhone={setPhone} />
+            {days && (
+              <StyledDays setDay={setDay} days={Object.keys(times!) as unknown as IDays[]} />
+            )}
+            {times && time && <StyledTimes time={time} setTime={setTime} times={times[day]} />}
 
-              <Confirm
-                onClick={async () => {
-                  await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
-                    method: "post",
-                    body: JSON.stringify({ day, time, barber, name, phone }),
-                  }).finally(() => setShowForm(false));
-                }}
-              >
-                Confirm
-              </Confirm>
-              <StyledCancel onClick={() => setShowForm(false)}>Cancel</StyledCancel>
-            </StartColumn>
-          </>
+            <Confirm
+              disabled={isNotReady()}
+              onClick={async () => {
+                await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
+                  method: "post",
+                  body: JSON.stringify({ day, time, barber, name, phone }),
+                }).finally(() => setShowForm(false));
+              }}
+            >
+              Confirm
+            </Confirm>
+            <StyledCancel onClick={() => setShowForm(false)}>Cancel</StyledCancel>
+          </StartColumn>
         )}
       </FormWrapper>
     </Column>

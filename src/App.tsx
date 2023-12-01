@@ -29,10 +29,6 @@ const ResponsiveWrapper = styled.div`
 `;
 
 const Content = styled.div`
-  // margin-left: 1em;
-
-  // border: 1px solid pink;
-
   display: flex;
   flex-direction: column;
 `;
@@ -100,7 +96,6 @@ const ButtonContainer = styled.div`
 
     // flex-direction: column;
     justify-content: center;
-    // border: 1px solid pink;
   }
 
   /* @media (max-width: 768px) {
@@ -115,8 +110,6 @@ function App() {
   const [adminLoginView, setAdminLoginView] = useState(false);
   const [showColors, setShowColors] = useState(false);
   const [showForm, setShowForm] = useState(false);
-
-  console.log(showForm, "show form");
 
   return (
     <AppView>

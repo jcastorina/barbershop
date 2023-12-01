@@ -345,7 +345,6 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     margin: 3em;
     height: 30em;
     width: 18em;
-    border: 1px solid black;
   }
 
   button {

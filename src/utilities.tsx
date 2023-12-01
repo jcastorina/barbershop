@@ -75,3 +75,5 @@ export const Colors = ({ showColors }: { showColors: boolean }) => (
     </RowItem>
   </ColorsContainer>
 );
+
+export const isNumeric = (value: any) => /^[0-9]*$/.test(value);
