@@ -1,5 +1,28 @@
-const express = require("express");
 const cors = require("cors");
+const express = require("express");
+const moment = require("moment-timezone");
+
+const filterTimesAfterCurrentCentral = (timesArray, tz) => {
+  const currentTime = moment().tz(tz);
+
+  return timesArray.filter((timeString) => {
+    const timeMoment = moment.tz(
+      `${currentTime.format("YYYY-MM-DD")} ${timeString}`,
+      "YYYY-MM-DD h:mm A",
+      tz
+    );
+
+    return timeMoment.isSameOrAfter(currentTime);
+  });
+};
+
+const getTodayAndTomorrowDates = () => {
+  const today = moment().format("M/D");
+
+  const tomorrow = moment().add(1, "days").format("M/D");
+
+  return [today, tomorrow];
+};
 
 const app = express();
 
@@ -61,7 +84,6 @@ app.post("/addEmployee", (req, res) => {
   return res.end();
 });
 
-//const pw = "jeffersonstreet1!";
 const pw = "1";
 
 app.post("/loginAdmin", (req, res) => {
@@ -103,7 +125,7 @@ const blankSched = {
 };
 
 const buildSchedArray = () => {
-  const hours = makeHours(9, 8);
+  const hours = makeHours(9, 15);
 
   return hours.map((time) => ({ ...blankSched, time }));
 };
@@ -114,9 +136,15 @@ const appts = {
 };
 
 app.get("/times", (req, res) => {
+  const _appt = appts.Today.map((item) => item.time);
+
+  const filteredTimes = filterTimesAfterCurrentCentral(_appt, "America/Los_Angeles");
+
+  const [today, tomorrow] = getTodayAndTomorrowDates();
+
   const formattedTimes = {
-    Today: appts.Today.map((item) => item.time),
-    Tomorrow: appts.Tomorrow.map((item) => item.time),
+    [`Today ${today}`]: filteredTimes,
+    [`Tomorrow ${tomorrow}`]: appts.Tomorrow.map((item) => item.time),
   };
   res.write(JSON.stringify(formattedTimes));
   return res.end();

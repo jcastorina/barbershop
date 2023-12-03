@@ -2,40 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 import { colors, isNumeric } from "./utilities";
-const Anchor = styled.a`
-  //  padding: 1.5em 2.4em;
-
-  background-color: ${colors.coolBlue};
-
-  font-size: 1em;
-
-  color: white;
-
-  border: none;
-
-  margin: 1em;
-
-  text-decoration: none;
-
-  border-radius: 2px;
-
-  display: grid;
-  place-items: center;
-
-  &:hover {
-    cursor: pointer;
-    background-color: ${colors.chairBlue};
-  }
-
-  @media (max-width: 768px) {
-    width: 80%;
-  }
-`;
 
 const selectorFontSize = "1em";
 const inputFontSize = 1.05;
-const marginBottom = "1.25em";
-const elementHeight = "5em";
 
 const Column = styled.div`
   display: flex;
@@ -50,176 +19,39 @@ const FormWrapper = styled.div`
   justify-content: center;
 `;
 
-const RowContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-`;
-
-const IconContainer = styled.div`
-  border-radius: 32px;
-
-  width: 1.2em;
-  height: 1.2em;
-
-  border: 1px solid ${colors.milGreen};
-
-  display: grid;
-  place-items: center;
-`;
-
 const StyledLabel = styled.label`
   margin-bottom: 0.2em;
 `;
 
-const delay = (ms: number, cb: () => void) => setTimeout(cb, ms);
-
-const Times = ({
-  time,
-  times,
-  setTime,
-  className,
-}: {
-  time: string;
-  times: string[];
-  setTime: (time: string) => void;
-  className?: string;
-}) => {
-  const [show, setShow] = useState(false);
-  const [startAnimation, setStartAnimation] = useState(false);
-  const timeBoxRef = useRef<HTMLDivElement>(null);
-  const [count, setCount] = useState(0);
-
-  const handleClickOutside = (event: MouseEvent) => {
-    if (timeBoxRef.current && !timeBoxRef.current.contains(event.target as Node)) {
-      setShow(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!startAnimation) return;
-
-    const handler = delay(120, () => {
-      setShow(false);
-      setStartAnimation(false);
-    });
-
-    return () => clearInterval(handler);
-  }, [startAnimation]);
-
-  return (
-    <div className={className}>
-      <StyledLabel>Time</StyledLabel>
-      <div className={"select-border-wrapper"}>
-        <select>
-          {times.map((time) => (
-            <option>{time}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-};
-
-const StyledTimes = styled(Times)`
-  margin-left: 1em;
-  margin-bottom: 1em;
-
+const StartColumn = styled.div<{ marginTop?: number }>`
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 
-  .select-border-wrapper {
-    display: grid;
-    place-items: center;
-    height: 3em;
-    width: 12em;
-  }
+  height: 40vh;
 
-  select {
-    overflow: scroll;
-    box-sizing: content-box;
-    width: 12em;
-    padding: 1em;
-
-    border-radius: 2px;
-
-    cursor: pointer;
-
-    &:focus {
-      border: 2px solid black;
-    }
-
-    &:active {
-      border: 2px solid black;
-    }
-  }
-
-  option {
-    overflow: scroll;
-    width: 12em;
-
-    padding: 5em;
-
-    margin: 5em;
-  }
-
-  button {
-    background-color: white;
-    border: none;
-    font-size: ${selectorFontSize};
-    height: 3.5em;
-    width: 14em;
-    max-width: 90vh;
-    padding: 0.6em 1em;
-    margin: 0.2em;
-
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-
-    padding-left: 1.5em;
-  }
+  justify-content: space-between;
 `;
 
-const Days = ({
-  days,
-  setDay,
-  className,
-}: {
-  days: IDays[];
-  setDay: (day: IDays) => void;
-  className?: string;
-}) => {
-  return (
-    <div className={className}>
-      <StyledLabel>Day</StyledLabel>
-      <div className={"select-border-wrapper"}>
-        <select
-          onChange={(e) => {
-            setDay(e.target.value as IDays);
-          }}
-        >
-          {days.map((day) => (
-            <option value={day}>{day}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-};
+const delay = (ms: number, cb: () => void) => setTimeout(cb, ms);
 
 const Name = ({ setName, className }: { setName: (name: string) => void; className?: string }) => {
+  const nameRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (nameRef.current) {
+      nameRef.current.focus();
+    }
+  }, [nameRef.current]);
+
   return (
     <div className={className}>
       <StyledLabel>Name</StyledLabel>
-      <input placeholder={"e.g. John Smith"} onChange={(e) => setName(e.target.value)} />
+      <input
+        ref={nameRef}
+        placeholder={"e.g. John Smith"}
+        onChange={(e) => setName(e.target.value)}
+      />
     </div>
   );
 };
@@ -238,7 +70,6 @@ const PhoneNumber = ({
   const areaCodeRef = useRef<HTMLInputElement | null>(null);
   const prefixRef = useRef<HTMLInputElement | null>(null);
   const suffixRef = useRef<HTMLInputElement | null>(null);
-  console.log(areaCode, prefix, suffix, "phone #");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -293,6 +124,76 @@ const PhoneNumber = ({
     </div>
   );
 };
+
+const Days = ({
+  days,
+  setDay,
+  className,
+}: {
+  days: string[];
+  setDay: (day: string) => void;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <StyledLabel>Day</StyledLabel>
+      <div className={"select-border-wrapper"}>
+        <select
+          onChange={(e) => {
+            setDay(e.target.value);
+          }}
+        >
+          {days.map((day) => (
+            <option value={day}>{day}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
+
+const Times = ({
+  time,
+  times,
+  setTime,
+  className,
+}: {
+  time: string;
+  times: string[];
+  setTime: (time: string) => void;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <StyledLabel>Time</StyledLabel>
+      <div className={"select-border-wrapper"}>
+        <select>
+          {times.map((time) => (
+            <option>{time}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
+
+const StyledName = styled(Name)`
+  margin-left: 1em;
+  margin-bottom: 1em;
+
+  display: flex;
+  flex-direction: column;
+  input {
+    font-size: ${inputFontSize}em;
+
+    width: 14em;
+    padding: 0.8em;
+  }
+
+  input::placeholder {
+    font-size: ${inputFontSize * 0.8}em;
+  }
+`;
 
 const StyledPhoneNumber = styled(PhoneNumber)`
   margin-left: 1em;
@@ -352,8 +253,8 @@ const StyledDays = styled(Days)`
   flex-direction: column;
 
   .select-border-wrapper {
-    height: 3em;
-    width: 12em;
+    height: 3.4em;
+    width: 12.4em;
     display: grid;
     place-items: center;
   }
@@ -363,7 +264,7 @@ const StyledDays = styled(Days)`
     box-sizing: content-box;
 
     width: 12em;
-    padding: 1em;
+    padding: 1.2em;
 
     border-radius: 2px;
 
@@ -384,36 +285,68 @@ const StyledDays = styled(Days)`
   }
 `;
 
-const StyledName = styled(Name)`
+const StyledTimes = styled(Times)`
   margin-left: 1em;
   margin-bottom: 1em;
 
   display: flex;
   flex-direction: column;
-  input {
-    font-size: ${inputFontSize}em;
 
+  .select-border-wrapper {
+    display: grid;
+    place-items: center;
+    height: 3.4em;
+    width: 12.4em;
+  }
+
+  select {
+    overflow: scroll;
+    box-sizing: content-box;
+    width: 12em;
+    padding: 1.2em;
+
+    border-radius: 2px;
+
+    cursor: pointer;
+
+    &:focus {
+      border: 2px solid black;
+    }
+
+    &:active {
+      border: 2px solid black;
+    }
+  }
+
+  option {
+    overflow: scroll;
+    width: 12em;
+
+    padding: 5em;
+
+    margin: 5em;
+  }
+
+  button {
+    background-color: white;
+    border: none;
+    font-size: ${selectorFontSize};
+    height: 3.5em;
     width: 14em;
-    padding: 0.8em;
-  }
+    max-width: 90vh;
+    padding: 0.6em 1em;
+    margin: 0.2em;
 
-  input::placeholder {
-    font-size: ${inputFontSize * 0.8}em;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    padding-left: 1.5em;
   }
 `;
 
-const StartColumn = styled.div<{ marginTop?: number }>`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-
-  height: 40vh;
-
-  justify-content: space-between;
-`;
-
-const Confirm = styled.button`
-  padding: 1em 2em;
+const StyledConfirm = styled.button`
+  padding: 1.3em 2em;
 
   background-color: ${colors.coolBlue};
 
@@ -461,10 +394,8 @@ const StyledCancel = styled.div`
   }
 `;
 
-type IDays = "Today" | "Tomorrow";
-
 type ITimesObject = {
-  [key in IDays]: string[];
+  [x: string]: string[];
 };
 
 export function ScheduleForm({
@@ -475,8 +406,8 @@ export function ScheduleForm({
   setShowForm: (show: boolean) => void;
 }) {
   const [barber, setBarber] = useState("Mitch");
-  const [day, setDay] = useState<IDays>("Today");
-  const [days, setDays] = useState<IDays[] | null>(null);
+  const [day, setDay] = useState<string | null>(null);
+  const [days, setDays] = useState<string[] | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -492,25 +423,25 @@ export function ScheduleForm({
       try {
         const result = await fetch(`${process.env.REACT_APP_URL}/times`);
         const timesObject = (await result.json()) as ITimesObject;
-        const dayss = Object.keys(timesObject);
+        const _days = Object.keys(timesObject);
 
-        setDays(dayss as IDays[]);
+        setDay(_days[0]);
+        setDays(_days);
         setTimes(timesObject);
       } catch (e) {
         setHasError(true);
       } finally {
-        console.log(isLoading, "isloading in useeffect");
         setIsLoading(false);
       }
     })();
   }, [showForm]);
 
   useEffect(() => {
-    if (!times) return;
+    if (!times || !day || !days) return;
 
     setTime(times[day][0]);
-  }, [times, day]);
-  // console.log(phone, phone.length, name, name.length, isNotReady(), "phone");
+  }, [times, day, days]);
+
   return (
     <Column>
       <FormWrapper>
@@ -519,12 +450,12 @@ export function ScheduleForm({
           <StartColumn>
             <StyledName setName={setName} />
             <StyledPhoneNumber setPhone={setPhone} />
-            {days && (
-              <StyledDays setDay={setDay} days={Object.keys(times!) as unknown as IDays[]} />
+            {days && <StyledDays setDay={setDay} days={Object.keys(times!)} />}
+            {times && time && day && (
+              <StyledTimes time={time} setTime={setTime} times={times[day]} />
             )}
-            {times && time && <StyledTimes time={time} setTime={setTime} times={times[day]} />}
 
-            <Confirm
+            <StyledConfirm
               disabled={isNotReady()}
               onClick={async () => {
                 await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
@@ -534,7 +465,7 @@ export function ScheduleForm({
               }}
             >
               Confirm
-            </Confirm>
+            </StyledConfirm>
             <StyledCancel onClick={() => setShowForm(false)}>Cancel</StyledCancel>
           </StartColumn>
         )}

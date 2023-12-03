@@ -89,6 +89,11 @@ const ButtonContainer = styled.div`
     gap: 10px;
   }
 
+  @media (max-width: 768px) {
+    // background-color: green;
+    margin-top: 3em;
+  }
+
   @media (min-height: 600px) {
     //margin-top: 40em;
     height: 24em;
