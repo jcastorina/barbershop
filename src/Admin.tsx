@@ -189,15 +189,20 @@ const Fog = styled.div<{ show: boolean }>`
   top: 0;
 `;
 
-const hours = ((start, end) => {
-  let hours = [];
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
-  for (let i = start; i < end; i++) {
-    hours.push(i);
-  }
+// const hours = ((start, end) => {
+//   let hours = [];
 
-  return hours;
-})(8, 18);
+//   for (let i = start; i < end; i++) {
+//     hours.push(i);
+//   }
+
+//   return hours;
+// })(8, 18);
 
 function AdminLoggedIn({
   setAdminLoggedIn,
@@ -214,9 +219,11 @@ function AdminLoggedIn({
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, setAddEmployee] = useState("");
   const [selected, setSelected] = useState("");
-  const [selectedStartHour, setSelectedStartHour] = useState(hours[0]);
-  const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
+  // const [selectedStartHour, setSelectedStartHour] = useState(hours[0]);
+  // const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
   const [employees, setEmployees] = useState(["Mitch"]);
+  const [days, setDays] = useState<string[] | null>();
+  // const [hours, ]
 
   useEffect(() => {
     (async () => {
@@ -226,44 +233,50 @@ function AdminLoggedIn({
       if (typeof employees === "object") {
         setEmployees(employees);
       }
+
+      const daysResult = await fetch("http://127.0.0.1:3001/adminTimeList");
+      const daysText = await daysResult.text();
+      const _days = JSON.parse(daysText);
+      setDays(_days);
     })();
   }, []);
 
+  console.log(days, "days");
   return (
-    <div className={className}>
+    <Container className={className}>
       <Fog show={showModal} />
       {showModal && (
         <StyledModal employee={selected} show={showModal} setShowModal={setShowModal} />
       )}
-      <div className="group-container">
+
+      <Container className="group-container">
         <h2>Times</h2>
-        <div>
-          Start Time:{" "}
-          <select
-            onChange={(e) => {
-              setSelectedStartHour(parseInt(e.target.value));
-            }}
-          >
-            {hours.map((hour) => {
-              hour = hour > 12 ? hour - 12 : hour;
-              return <option value={hour}>{hour}</option>;
-            })}
-          </select>
+        <div className={"hours-container"}>
+          <div>
+            hours{" "}
+            {/* <select
+              onChange={(e) => {
+                setSelectedStartHour(parseInt(e.target.value));
+              }}
+            >
+              {hours.map((hour) => {
+                hour = hour > 12 ? hour - 12 : hour;
+                return <option value={hour}>{hour}</option>;
+              })}
+            </select>
+            <select
+              onChange={(e) => {
+                setSelectedEndHour(parseInt(e.target.value));
+              }}
+            >
+              {hours.slice(hours.indexOf(selectedStartHour)).map((hour) => {
+                hour = hour > 12 ? hour - 12 : hour;
+                return <option value={hour}>{hour}</option>;
+              })}
+            </select> */}
+          </div>
         </div>
-        <div>
-          End Time:{" "}
-          <select
-            onChange={(e) => {
-              setSelectedEndHour(parseInt(e.target.value));
-            }}
-          >
-            {hours.slice(hours.indexOf(selectedStartHour)).map((hour) => {
-              hour = hour > 12 ? hour - 12 : hour;
-              return <option value={hour}>{hour}</option>;
-            })}
-          </select>
-        </div>
-      </div>
+      </Container>
       <div className="group-container">
         <h2>Roster</h2>
         <span>
@@ -321,7 +334,7 @@ function AdminLoggedIn({
           Go Back To Calendar
         </button>
       </div>
-    </div>
+    </Container>
   );
 }
 
@@ -329,12 +342,13 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
   height: 100vh;
   width: 100vw;
   display: flex;
-  flex-direction: row;
+  /* flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: center; */
 
   h2 {
     width: 10em;
+    border: 1px solid pink;
   }
 
   .group-container {
@@ -345,6 +359,20 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     margin: 3em;
     height: 30em;
     width: 18em;
+
+    border: 1px solid green;
+  }
+
+  .hours-container {
+    display: flex;
+    flex-direction: row;
+    //  align-items: center;
+    justify-content: flex-start;
+    // margin: 3em;
+    height: 30em;
+    width: 18em;
+
+    border: 1px solid red;
   }
 
   button {

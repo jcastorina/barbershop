@@ -36,14 +36,14 @@ const Content = styled.div`
 const Footer = styled.div`
   position: fixed;
   background-color: ${colors.floor};
-  color: black;
+  color: white;
   bottom: 0px;
   width: 100%;
   height: 4em;
   display: grid;
   place-items: center;
 
-  box-shadow: 0px -2px 4px ${colors.milGreen};
+  box-shadow: 0px -1px 3px ${colors.milGreen};
   //  min-width: 32em;
 `;
 
@@ -90,8 +90,7 @@ const ButtonContainer = styled.div`
   }
 
   @media (max-width: 768px) {
-    // background-color: green;
-    margin-top: 3em;
+    margin-top: 4em;
   }
 
   @media (min-height: 600px) {
@@ -110,11 +109,39 @@ const ButtonContainer = styled.div`
 
 function App() {
   const [needsUpdate, setNeedsUpdate] = useState(false);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(true);
   const [password, setPassword] = useState("");
   const [adminLoginView, setAdminLoginView] = useState(false);
   const [showColors, setShowColors] = useState(false);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    const pathname = window.location.pathname;
+
+    if (pathname === "/admin") {
+      setAdminLoginView(true);
+    }
+  }, []);
+
+  if (adminLoggedIn) {
+    return (
+      <StyledAdminLoggedIn
+        setAdminLoggedIn={setAdminLoggedIn}
+        setAdminLoginView={setAdminLoginView}
+      />
+    );
+  }
+
+  if (adminLoginView) {
+    return (
+      <StyledAdminLoginView
+        password={password}
+        setPassword={setPassword}
+        setAdminLoggedIn={setAdminLoggedIn}
+        setAdminLoginView={setAdminLoginView}
+      />
+    );
+  }
 
   return (
     <AppView>
@@ -146,7 +173,7 @@ function App() {
           {showForm && <ScheduleForm showForm={showForm} setShowForm={setShowForm} />}
         </Content>
       </ResponsiveWrapper>
-      <Footer>Footer Content</Footer>
+      <Footer>Yanni</Footer>
     </AppView>
   );
 }

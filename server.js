@@ -2,6 +2,8 @@ const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
 
+const tz = "America/Los_Angeles";
+
 const filterTimesAfterCurrentCentral = (timesArray, tz) => {
   const currentTime = moment().tz(tz);
 
@@ -15,6 +17,38 @@ const filterTimesAfterCurrentCentral = (timesArray, tz) => {
     return timeMoment.isSameOrAfter(currentTime);
   });
 };
+
+const getWeekdaysWithDates = (tz) => {
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    // Using 'moment' to get the current day and adding 'i' days to it
+    const date = moment().tz(tz).add(i, "days");
+    // Formatting the date as 'dddd MM/DD' (Day of week, Month/Day)
+    dates.push({ name: date.format("dddd M/D"), day: date.day() });
+  }
+
+  return dates;
+};
+
+const makeInitialHoursObject = (tz) => {
+  const dates = getWeekdaysWithDates(tz);
+
+  const hours = {};
+
+  dates.forEach((date, i) => {
+    hours[i] = {
+      name: date.name,
+      dayNum: date.day,
+      start: 8,
+      end: date.day === 6 ? 6 : 10,
+      closed: date.day === 0 || date.day === 1 ? true : false,
+    };
+  });
+
+  return hours;
+};
+
+const hours = makeInitialHoursObject(tz);
 
 const getTodayAndTomorrowDates = () => {
   const today = moment().format("M/D");
@@ -84,6 +118,12 @@ app.post("/addEmployee", (req, res) => {
   return res.end();
 });
 
+app.get("/adminTimeList", (req, res) => {
+  console.log("requesting time list");
+  res.write(JSON.stringify(hours));
+  return res.end();
+});
+
 const pw = "1";
 
 app.post("/loginAdmin", (req, res) => {
@@ -138,7 +178,7 @@ const appts = {
 app.get("/times", (req, res) => {
   const _appt = appts.Today.map((item) => item.time);
 
-  const filteredTimes = filterTimesAfterCurrentCentral(_appt, "America/Los_Angeles");
+  const filteredTimes = filterTimesAfterCurrentCentral(_appt, tz);
 
   const [today, tomorrow] = getTodayAndTomorrowDates();
 
