@@ -47,9 +47,10 @@ const Name = ({
   const nameRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
-    const isAlphabetic = /^[A-Za-z]+$/.test(e.target.value);
+    console.log(e.target.value, "initial value");
+    const isAlphabetic = /^[A-Za-z\s'\.\-,]+$/.test(e.target.value);
     console.log(isAlphabetic, e.target.value);
-    if (isAlphabetic) {
+    if (isAlphabetic || e.target.value === "") {
       setter(e.target.value);
     }
   };
