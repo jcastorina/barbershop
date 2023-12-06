@@ -35,8 +35,24 @@ const StartColumn = styled.div<{ marginTop?: number }>`
 
 const delay = (ms: number, cb: () => void) => setTimeout(cb, ms);
 
-const Name = ({ setName, className }: { setName: (name: string) => void; className?: string }) => {
+const Name = ({
+  name,
+  setName,
+  className,
+}: {
+  name: string;
+  setName: (name: string) => void;
+  className?: string;
+}) => {
   const nameRef = useRef<HTMLInputElement | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    const isAlphabetic = /^[A-Za-z]+$/.test(e.target.value);
+    console.log(isAlphabetic, e.target.value);
+    if (isAlphabetic) {
+      setter(e.target.value);
+    }
+  };
 
   useEffect(() => {
     if (nameRef.current) {
@@ -50,7 +66,8 @@ const Name = ({ setName, className }: { setName: (name: string) => void; classNa
       <input
         ref={nameRef}
         placeholder={"e.g. John Smith"}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => handleChange(e, setName)}
+        value={name}
       />
     </div>
   );
@@ -448,7 +465,7 @@ export function ScheduleForm({
         {isLoading && <>{isLoading}</>}
         {!isLoading && (
           <StartColumn>
-            <StyledName setName={setName} />
+            <StyledName name={name} setName={setName} />
             <StyledPhoneNumber setPhone={setPhone} />
             {days && <StyledDays setDay={setDay} days={Object.keys(times!)} />}
             {times && time && day && (

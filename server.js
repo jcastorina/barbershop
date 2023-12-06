@@ -2,6 +2,15 @@ const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
 
+const app = express();
+
+app.use(cors({ optionsSuccessStatus: 200, origin: "*" }));
+app.use(express.text());
+
+const PORT = 3001;
+
+app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+
 const tz = "America/Los_Angeles";
 
 const filterTimesAfterCurrentCentral = (timesArray, tz) => {
@@ -30,25 +39,31 @@ const getWeekdaysWithDates = (tz) => {
   return dates;
 };
 
-const makeInitialHoursObject = (tz) => {
-  const dates = getWeekdaysWithDates(tz);
+const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+const makeBaseSchedule = () => {
   const hours = {};
 
-  dates.forEach((date, i) => {
+  for (let i = 0; i < 7; i++) {
     hours[i] = {
-      name: date.name,
-      dayNum: date.day,
+      name: dayNames[i],
+      dayNum: i,
       start: 8,
-      end: date.day === 6 ? 6 : 10,
-      closed: date.day === 0 || date.day === 1 ? true : false,
+      end: i === 6 ? 6 : 10,
+      closed: i === 0 || i === 1 ? true : false,
     };
-  });
+  }
 
   return hours;
 };
 
-const hours = makeInitialHoursObject(tz);
+const baseSchedule = Object.freeze(makeBaseSchedule());
+
+const hours = { ...baseSchedule };
+
+const refreshHours = (tz) => {
+  const date = moment().tz(tz);
+};
 
 const getTodayAndTomorrowDates = () => {
   const today = moment().format("M/D");
@@ -57,15 +72,6 @@ const getTodayAndTomorrowDates = () => {
 
   return [today, tomorrow];
 };
-
-const app = express();
-
-app.use(cors({ optionsSuccessStatus: 200, origin: "*" }));
-app.use(express.text());
-
-const PORT = 3001;
-
-app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
 const data = {
   employees: [],
@@ -120,6 +126,9 @@ app.post("/addEmployee", (req, res) => {
 
 app.get("/adminTimeList", (req, res) => {
   console.log("requesting time list");
+
+  refreshHours(tz);
+
   res.write(JSON.stringify(hours));
   return res.end();
 });
@@ -195,37 +204,8 @@ app.post("/newAppointment", (req, res) => {
 
   const { day, time, barber, name, phone } = result;
 
-  const validation = {
-    name: 0,
-    phone: 0,
-    day: 0,
-    time: 0,
-    barber: 0,
-  };
+  console.log(day, time, barber, name, phone);
 
-  // need to make sure appt is available too
-
-  if (day) validation.day = 1;
-  if (time) validation.time = 1;
-  if (barber) validation.barber = 1;
-  if (name) validation.name = 1;
-  if (phone) validation.phone = 1;
-
-  const list = appts[day];
-  const avail = list.includes(time);
-  if (avail) {
-    const idx = list.indexOf(time);
-
-    if (idx === 0) {
-      list.shift();
-      appts[day] = list;
-    } else {
-      const newa = [...list.slice(0, idx), ...list.slice(idx + 1, list.length)];
-      appts[day] = newa;
-    }
-  }
-
-  res.write(JSON.stringify(validation));
   res.status(200);
   return res.end();
 });

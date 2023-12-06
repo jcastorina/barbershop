@@ -109,7 +109,7 @@ const ButtonContainer = styled.div`
 
 function App() {
   const [needsUpdate, setNeedsUpdate] = useState(false);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(true);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
   const [adminLoginView, setAdminLoginView] = useState(false);
   const [showColors, setShowColors] = useState(false);
