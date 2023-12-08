@@ -70,6 +70,23 @@ const schedule = {
   },
 };
 
+const filterArray = (array1, array2) => {
+  let res = [];
+
+  for (let i = 0; i < array1.length; i++) {
+    let contains = false;
+    for (let j = 0; j < array2.length; j++) {
+      if (array1[i] === array2[j]) {
+        contains = true;
+      }
+    }
+    if (!contains) {
+      res.push(array1[i]);
+    }
+  }
+  return res;
+};
+
 const getAvailableTimes = (schedule) => {
   const todayHoursRange = schedule.Today.hours;
   const tomorrowHoursRange = schedule.Tomorrow.hours;
@@ -88,10 +105,17 @@ const getAvailableTimes = (schedule) => {
     Tomorrow = makeHours(tomorrowHoursRange[0], tomorrowHoursRange[1] - tomorrowHoursRange[0]);
   }
 
-  if (Today) {
+  if (Today && today.length) {
+    console.log(today, "today apppts");
+
+    Today = filterArray(
+      Today,
+      today.map((appt) => appt.time)
+    );
   }
 
-  if (Tomorrow) {
+  if (Tomorrow && tomorrow.length) {
+    console.log(tomorrow, "tomorrow apppts");
   }
 
   return { Today, Tomorrow };
@@ -106,5 +130,34 @@ app.get("/clientObject", (req, res) => {
 
 app.get("/adminObject", (req, res) => {
   res.write(JSON.stringify(schedule));
+  return res.end();
+});
+
+app.post("/newAppointment", (req, res) => {
+  const result = JSON.parse(req.body);
+
+  const { day, time, barber, name, phone } = result;
+
+  if (
+    typeof day !== "string" ||
+    typeof time !== "string" ||
+    typeof barber !== "string" ||
+    typeof name !== "string" ||
+    typeof phone !== "string"
+  ) {
+    return res.status(400);
+  }
+
+  const appointmentRecord = {
+    day,
+    time,
+    barber,
+    name,
+    phone,
+  };
+
+  schedule[day].appts.push(appointmentRecord);
+
+  res.status(200);
   return res.end();
 });
