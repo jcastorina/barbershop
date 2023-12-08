@@ -215,7 +215,7 @@ type IAppointmentRecord = {
 };
 
 type IDaySchedule = {
-  hours: string[] | never[] | null;
+  hours: number[] | null;
   appts: IAppointmentRecord[] | never[];
 };
 
@@ -236,13 +236,13 @@ function AdminLoggedIn({
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, setAddEmployee] = useState("");
   const [selected, setSelected] = useState("");
-  // const [selectedStartHour, setSelectedStartHour] = useState(hours[0]);
-  // const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
+
   const [employees, setEmployees] = useState(["Mitch"]);
-  const [days, setDays] = useState<string[] | null>();
   const [adminObject, setAdminObject] = useState<ISchedule | null>(null);
   const [isClosedToday, setIsClosedToday] = useState(false);
   const [isClosedTomorrow, setIsClosedTomorrow] = useState(false);
+  const [todayHours, setTodayHours] = useState<number[] | never[] | null>(null);
+  const [tomorrowHours, setTomorrowHours] = useState<number[] | never[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -259,9 +259,13 @@ function AdminLoggedIn({
       setAdminObject(adminObject);
       if (adminObject.Today.hours === null) {
         setIsClosedToday(true);
+      } else {
+        setTodayHours(adminObject.Today.hours);
       }
       if (adminObject.Tomorrow.hours === null) {
         setIsClosedTomorrow(true);
+      } else {
+        setTomorrowHours(adminObject.Tomorrow.hours);
       }
     })();
   }, []);
@@ -278,22 +282,28 @@ function AdminLoggedIn({
         <h2>Schedule</h2>
         <div className={"hours-container"}>
           <div>
-            Today: <input />
-            <input />
-            <input
-              checked={isClosedToday}
-              type="checkbox"
-              onChange={(e) => setIsClosedToday(Boolean(e.target.checked))}
-            />
+            Today:
+            <div>
+              <input disabled={isClosedToday} value={todayHours ? todayHours[0] : 0} />
+              <input disabled={isClosedToday} value={todayHours ? todayHours[1] : 0} />
+              <input
+                checked={isClosedToday}
+                type="checkbox"
+                onChange={(e) => setIsClosedToday(Boolean(e.target.checked))}
+              />
+            </div>
           </div>
           <div>
-            Tomorrow: <input />
-            <input />
-            <input
-              checked={isClosedTomorrow}
-              type="checkbox"
-              onChange={(e) => setIsClosedTomorrow(Boolean(e.target.checked))}
-            />{" "}
+            Tomorrow:
+            <div>
+              <input disabled={isClosedTomorrow} value={tomorrowHours ? tomorrowHours[0] : 0} />
+              <input disabled={isClosedTomorrow} value={tomorrowHours ? tomorrowHours[0] : 0} />
+              <input
+                checked={isClosedTomorrow}
+                type="checkbox"
+                onChange={(e) => setIsClosedTomorrow(Boolean(e.target.checked))}
+              />
+            </div>
           </div>
         </div>
       </Container>
@@ -393,6 +403,20 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     width: 18em;
 
     border: 1px solid red;
+
+    div {
+      margin-left: 2em;
+      margin-right: 1em;
+      //width: 12em;
+      display: flex;
+      flex-direction: row;
+
+      justify-content: space-between;
+
+      input {
+        width: 2em;
+      }
+    }
   }
 
   button {
