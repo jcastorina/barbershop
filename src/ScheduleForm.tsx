@@ -185,7 +185,11 @@ const Times = ({
     <div className={className}>
       <StyledLabel>Time</StyledLabel>
       <div className={"select-border-wrapper"}>
-        <select>
+        <select
+          onChange={(e) => {
+            setTime(e.target.value);
+          }}
+        >
           {times.map((time) => (
             <option>{time}</option>
           ))}

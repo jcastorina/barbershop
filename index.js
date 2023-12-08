@@ -106,8 +106,6 @@ const getAvailableTimes = (schedule) => {
   }
 
   if (Today && today.length) {
-    console.log(today, "today apppts");
-
     Today = filterArray(
       Today,
       today.map((appt) => appt.time)
@@ -115,7 +113,10 @@ const getAvailableTimes = (schedule) => {
   }
 
   if (Tomorrow && tomorrow.length) {
-    console.log(tomorrow, "tomorrow apppts");
+    Tomorrow = filterArray(
+      Tomorrow,
+      tomorrow.map((appt) => appt.time)
+    );
   }
 
   return { Today, Tomorrow };
@@ -157,6 +158,8 @@ app.post("/newAppointment", (req, res) => {
   };
 
   schedule[day].appts.push(appointmentRecord);
+
+  console.log(appointmentRecord, "appt record");
 
   res.status(200);
   return res.end();
