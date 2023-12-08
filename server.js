@@ -167,14 +167,17 @@ const makeHours = (start, hours) => {
 };
 
 const blankSched = {
-  name: "",
-  day: "",
-  time: "",
-  barber: "",
+  entries: [],
 };
+
+const schedule = {};
 
 const buildSchedArray = () => {
   const hours = makeHours(9, 15);
+
+  hours.forEach((hour) => {
+    schedule[hour] = { entries: [], hasEntry: false };
+  });
 
   return hours.map((time) => ({ ...blankSched, time }));
 };
@@ -183,6 +186,8 @@ const appts = {
   Today: buildSchedArray(),
   Tomorrow: buildSchedArray(),
 };
+
+console.log(appts);
 
 app.get("/times", (req, res) => {
   const _appt = appts.Today.map((item) => item.time);

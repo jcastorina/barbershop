@@ -148,8 +148,8 @@ const Days = ({
   setDay,
   className,
 }: {
-  days: string[];
-  setDay: (day: string) => void;
+  days: IDays[];
+  setDay: (days: IDays) => void;
   className?: string;
 }) => {
   return (
@@ -158,7 +158,7 @@ const Days = ({
       <div className={"select-border-wrapper"}>
         <select
           onChange={(e) => {
-            setDay(e.target.value);
+            setDay(e.target.value as IDays);
           }}
         >
           {days.map((day) => (
@@ -413,8 +413,11 @@ const StyledCancel = styled.div`
 `;
 
 type ITimesObject = {
-  [x: string]: string[];
+  Today: string[];
+  Tomorrow: string[];
 };
+
+type IDays = "Today" | "Tomorrow";
 
 export function ScheduleForm({
   showForm,
@@ -424,8 +427,8 @@ export function ScheduleForm({
   setShowForm: (show: boolean) => void;
 }) {
   const [barber, setBarber] = useState("Mitch");
-  const [day, setDay] = useState<string | null>(null);
-  const [days, setDays] = useState<string[] | null>(null);
+  const [day, setDay] = useState<IDays | null>(null);
+  const [days, setDays] = useState<IDays[] | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -439,12 +442,12 @@ export function ScheduleForm({
     setIsLoading(true);
     (async () => {
       try {
-        const result = await fetch(`${process.env.REACT_APP_URL}/times`);
+        const result = await fetch(`${process.env.REACT_APP_URL}/clientObject`);
         const timesObject = (await result.json()) as ITimesObject;
         const _days = Object.keys(timesObject);
-
-        setDay(_days[0]);
-        setDays(_days);
+        console.log(timesObject, "timesObject");
+        setDay(_days[0] as IDays);
+        setDays(_days as IDays[]);
         setTimes(timesObject);
       } catch (e) {
         setHasError(true);
@@ -468,7 +471,7 @@ export function ScheduleForm({
           <StartColumn>
             <StyledName name={name} setName={setName} />
             <StyledPhoneNumber setPhone={setPhone} />
-            {days && <StyledDays setDay={setDay} days={Object.keys(times!)} />}
+            {days && <StyledDays setDay={setDay} days={days} />}
             {times && time && day && (
               <StyledTimes time={time} setTime={setTime} times={times[day]} />
             )}
