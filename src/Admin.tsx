@@ -123,24 +123,24 @@ function Modal({
       <span>Delete {employee}?</span>
       <div>
         <button
-          onClick={async () => {
-            try {
-              const result = await fetch("http://127.0.0.1:3001/deleteEmployee", {
-                method: "post",
-                headers: { "Content-Type": "text/plain" },
-                body: employee,
-              });
-              const text = await result.text();
-              console.log(text, "running set need supdate");
-              // setNeedsUpdate((u) => !u);
-              console.log(text);
-            } catch (e) {
-              console.log("No employee found!");
-            } finally {
-              console.log("trying to update in finally block");
-              setShowModal(false);
-            }
-          }}
+        // onClick={async () => {
+        //   try {
+        //     const result = await fetch("http://127.0.0.1:3001/deleteEmployee", {
+        //       method: "post",
+        //       headers: { "Content-Type": "text/plain" },
+        //       body: employee,
+        //     });
+        //     const text = await result.text();
+        //     console.log(text, "running set need supdate");
+        //     // setNeedsUpdate((u) => !u);
+        //     console.log(text);
+        //   } catch (e) {
+        //     console.log("No employee found!");
+        //   } finally {
+        //     console.log("trying to update in finally block");
+        //     setShowModal(false);
+        //   }
+        // }}
         >
           Yes
         </button>
@@ -204,6 +204,23 @@ const Container = styled.div`
 //   return hours;
 // })(8, 18);
 
+type IDays = "Today" | "Tomorrow";
+
+type IAppointmentRecord = {
+  name: string;
+  time: string;
+  barber: string;
+  day: string;
+  phone: string;
+};
+
+type IDaySchedule = {
+  hours: string[] | never[] | null;
+  appts: IAppointmentRecord[] | never[];
+};
+
+type ISchedule = Record<IDays, IDaySchedule>;
+
 function AdminLoggedIn({
   setAdminLoggedIn,
   setAdminLoginView,
@@ -223,25 +240,33 @@ function AdminLoggedIn({
   // const [selectedEndHour, setSelectedEndHour] = useState(hours[hours.length - 1]);
   const [employees, setEmployees] = useState(["Mitch"]);
   const [days, setDays] = useState<string[] | null>();
-  // const [hours, ]
+  const [adminObject, setAdminObject] = useState<ISchedule | null>(null);
+  const [isClosedToday, setIsClosedToday] = useState(false);
+  const [isClosedTomorrow, setIsClosedTomorrow] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const result = await fetch("http://127.0.0.1:3001/employees");
-      const text = await result.text();
-      const employees = JSON.parse(text);
-      if (typeof employees === "object") {
-        setEmployees(employees);
-      }
+      // const result = await fetch("http://127.0.0.1:3001/employees");
+      // const text = await result.text();
+      // const employees = JSON.parse(text);
+      // if (typeof employees === "object") {
+      //   setEmployees(employees);
+      // }
 
-      const daysResult = await fetch("http://127.0.0.1:3001/adminTimeList");
-      const daysText = await daysResult.text();
-      const _days = JSON.parse(daysText);
-      setDays(_days);
+      const adminResult = await fetch("http://127.0.0.1:3001/adminObject");
+      const adminObjectJSON = await adminResult.text();
+      const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
+      setAdminObject(adminObject);
+      if (adminObject.Today.hours === null) {
+        setIsClosedToday(true);
+      }
+      if (adminObject.Tomorrow.hours === null) {
+        setIsClosedTomorrow(true);
+      }
     })();
   }, []);
 
-  console.log(days, "days");
+  console.log(adminObject, isClosedToday, isClosedTomorrow, "admin object");
   return (
     <Container className={className}>
       <Fog show={showModal} />
@@ -250,30 +275,25 @@ function AdminLoggedIn({
       )}
 
       <Container className="group-container">
-        <h2>Times</h2>
+        <h2>Schedule</h2>
         <div className={"hours-container"}>
           <div>
-            hours{" "}
-            {/* <select
-              onChange={(e) => {
-                setSelectedStartHour(parseInt(e.target.value));
-              }}
-            >
-              {hours.map((hour) => {
-                hour = hour > 12 ? hour - 12 : hour;
-                return <option value={hour}>{hour}</option>;
-              })}
-            </select>
-            <select
-              onChange={(e) => {
-                setSelectedEndHour(parseInt(e.target.value));
-              }}
-            >
-              {hours.slice(hours.indexOf(selectedStartHour)).map((hour) => {
-                hour = hour > 12 ? hour - 12 : hour;
-                return <option value={hour}>{hour}</option>;
-              })}
-            </select> */}
+            Today: <input />
+            <input />
+            <input
+              checked={isClosedToday}
+              type="checkbox"
+              onChange={(e) => setIsClosedToday(Boolean(e.target.checked))}
+            />
+          </div>
+          <div>
+            Tomorrow: <input />
+            <input />
+            <input
+              checked={isClosedTomorrow}
+              type="checkbox"
+              onChange={(e) => setIsClosedTomorrow(Boolean(e.target.checked))}
+            />{" "}
           </div>
         </div>
       </Container>
@@ -365,7 +385,7 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
 
   .hours-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     //  align-items: center;
     justify-content: flex-start;
     // margin: 3em;

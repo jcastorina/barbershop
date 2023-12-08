@@ -52,7 +52,7 @@ const defaultSched = Object.freeze({
   2: [8, 24],
   3: [8, 24],
   4: [8, 24],
-  5: [8, 24],
+  5: null,
   6: [8, 14],
 });
 
@@ -165,5 +165,18 @@ app.post("/newAppointment", (req, res) => {
   console.log(appointmentRecord, "appt record");
 
   res.status(200);
+  return res.end();
+});
+
+const pw = "1";
+
+app.post("/loginAdmin", (req, res) => {
+  if (typeof req.body === "string") {
+    if (req.body === pw) {
+      res.status(200);
+      return res.end();
+    }
+  }
+  res.status(401);
   return res.end();
 });
