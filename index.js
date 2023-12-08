@@ -12,7 +12,7 @@ const tz = "America/Los_Angeles";
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
-const filterTimesAfterCurrentCentral = (timesArray, tz) => {
+const filterTimesAfterCurrent = (timesArray, tz) => {
   const currentTime = moment().tz(tz);
 
   return timesArray.filter((timeString) => {
@@ -49,10 +49,10 @@ const makeHours = (start, hours) => {
 const defaultSched = Object.freeze({
   0: null,
   1: null,
-  2: [8, 17],
-  3: [8, 17],
-  4: [8, 17],
-  5: [8, 17],
+  2: [8, 24],
+  3: [8, 24],
+  4: [8, 24],
+  5: [8, 24],
   6: [8, 14],
 });
 
@@ -105,11 +105,14 @@ const getAvailableTimes = (schedule) => {
     Tomorrow = makeHours(tomorrowHoursRange[0], tomorrowHoursRange[1] - tomorrowHoursRange[0]);
   }
 
-  if (Today && today.length) {
-    Today = filterArray(
-      Today,
-      today.map((appt) => appt.time)
-    );
+  if (Today) {
+    Today = filterTimesAfterCurrent(Today, tz);
+    if (today.length) {
+      Today = filterArray(
+        Today,
+        today.map((appt) => appt.time)
+      );
+    }
   }
 
   if (Tomorrow && tomorrow.length) {

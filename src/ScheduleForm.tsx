@@ -144,10 +144,12 @@ const PhoneNumber = ({
 };
 
 const Days = ({
+  day,
   days,
   setDay,
   className,
 }: {
+  day: IDays;
   days: IDays[];
   setDay: (days: IDays) => void;
   className?: string;
@@ -160,6 +162,7 @@ const Days = ({
           onChange={(e) => {
             setDay(e.target.value as IDays);
           }}
+          value={day}
         >
           {days.map((day) => (
             <option value={day}>{day}</option>
@@ -189,6 +192,7 @@ const Times = ({
           onChange={(e) => {
             setTime(e.target.value);
           }}
+          value={time}
         >
           {times.map((time) => (
             <option>{time}</option>
@@ -416,9 +420,19 @@ const StyledCancel = styled.div`
   }
 `;
 
+const NotTakingAppointments = ({ day, className }: { day: IDays; className?: string }) => (
+  <span className={className}>No Availability {day}</span>
+);
+
+const StyledNotTakingAppointments = styled(NotTakingAppointments)`
+  margin-left: 1em;
+  color: ${colors.coolBlue};
+  font-weight: bold;
+`;
+
 type ITimesObject = {
-  Today: string[];
-  Tomorrow: string[];
+  Today: string[] | null;
+  Tomorrow: string[] | null;
 };
 
 type IDays = "Today" | "Tomorrow";
@@ -440,7 +454,7 @@ export function ScheduleForm({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  const isNotReady = () => !Boolean(phone.length === 10 && name);
+  const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
   useEffect(() => {
     setIsLoading(true);
@@ -448,10 +462,23 @@ export function ScheduleForm({
       try {
         const result = await fetch(`${process.env.REACT_APP_URL}/clientObject`);
         const timesObject = (await result.json()) as ITimesObject;
-        const _days = Object.keys(timesObject);
+        const days = Object.keys(timesObject);
         console.log(timesObject, "timesObject");
-        setDay(_days[0] as IDays);
-        setDays(_days as IDays[]);
+        if (timesObject.Today !== null) {
+          if (timesObject.Today.length === 0) {
+            setDay(days[1] as IDays);
+          } else {
+            setDay(days[0] as IDays);
+          }
+        } else {
+          if (timesObject.Tomorrow !== null) {
+            setDay(days[1] as IDays);
+          } else {
+            setDay(days[0] as IDays);
+          }
+        }
+
+        setDays(days as IDays[]);
         setTimes(timesObject);
       } catch (e) {
         setHasError(true);
@@ -463,10 +490,17 @@ export function ScheduleForm({
 
   useEffect(() => {
     if (!times || !day || !days) return;
-
-    setTime(times[day][0]);
+    console.log(times, day, "in times change");
+    if (times && times[day]) {
+      setTime(times[day]![0]);
+    } else {
+      setTime(null);
+    }
   }, [times, day, days]);
+  console.log(times, day, "in schedule");
 
+  const isClosed = day && times && times[day] === null ? true : false;
+  console.log(isClosed, day, times, "is closed");
   return (
     <Column>
       <FormWrapper>
@@ -475,11 +509,12 @@ export function ScheduleForm({
           <StartColumn>
             <StyledName name={name} setName={setName} />
             <StyledPhoneNumber setPhone={setPhone} />
-            {days && <StyledDays setDay={setDay} days={days} />}
-            {times && time && day && (
-              <StyledTimes time={time} setTime={setTime} times={times[day]} />
-            )}
-
+            {days && day && <StyledDays setDay={setDay} days={days} day={day} />}
+            {(times && time && day && times[day] && (
+              <StyledTimes time={time} setTime={setTime} times={times[day]!} />
+            )) ||
+              (day && <StyledNotTakingAppointments day={day} />)}
+            {/* {isClosed && day && <StyledNotTakingAppointments day={day} />} */}
             <StyledConfirm
               disabled={isNotReady()}
               onClick={async () => {
