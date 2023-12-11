@@ -47,9 +47,7 @@ const Name = ({
   const nameRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
-    console.log(e.target.value, "initial value");
     const isAlphabetic = /^[A-Za-z\s'\.\-,]+$/.test(e.target.value);
-    console.log(isAlphabetic, e.target.value);
     if (isAlphabetic || e.target.value === "") {
       setter(e.target.value);
     }
@@ -69,6 +67,7 @@ const Name = ({
         placeholder={"e.g. John Smith"}
         onChange={(e) => handleChange(e, setName)}
         value={name}
+        type={"text"}
       />
     </div>
   );
@@ -94,15 +93,13 @@ const PhoneNumber = ({
     setter: (val: string) => void,
     ref?: React.MutableRefObject<HTMLInputElement | null>
   ) => {
-    if (isNumeric(e.target.value)) {
-      if (e.target.value.length > 4) {
-        return;
-      }
-      setter(e.target.value);
-      if (ref?.current) {
-        if (e.target.value.length === 3) {
-          return ref.current?.focus(); // Shift focus when area code is 3 digits
-        }
+    if (e.target.value.length > 4) {
+      return;
+    }
+    setter(e.target.value);
+    if (ref?.current) {
+      if (e.target.value.length === 3) {
+        return ref.current?.focus(); // Shift focus when area code is 3 digits
       }
     }
   };
@@ -117,6 +114,7 @@ const PhoneNumber = ({
       <div className={"phone-row"}>
         <input
           value={areaCode}
+          type={"number"}
           ref={areaCodeRef}
           className={"phone-area-code"}
           placeholder={"(555)"}
@@ -125,6 +123,7 @@ const PhoneNumber = ({
         <span className={"markup"}>-</span>
         <input
           value={prefix}
+          type={"number"}
           ref={prefixRef}
           className={"phone-prefix"}
           placeholder={"555"}
@@ -133,6 +132,7 @@ const PhoneNumber = ({
         <span className={"markup"}>-</span>
         <input
           value={suffix}
+          type={"number"}
           ref={suffixRef}
           className={"phone-suffix"}
           placeholder={"5555"}
@@ -463,7 +463,6 @@ export function ScheduleForm({
         const result = await fetch(`${process.env.REACT_APP_URL}/clientObject`);
         const timesObject = (await result.json()) as ITimesObject;
         const days = Object.keys(timesObject);
-        console.log(timesObject, "timesObject");
         if (timesObject.Today !== null) {
           if (timesObject.Today.length === 0) {
             setDay(days[1] as IDays);
@@ -490,17 +489,15 @@ export function ScheduleForm({
 
   useEffect(() => {
     if (!times || !day || !days) return;
-    console.log(times, day, "in times change");
     if (times && times[day]) {
       setTime(times[day]![0]);
     } else {
       setTime(null);
     }
   }, [times, day, days]);
-  console.log(times, day, "in schedule");
 
   const isClosed = day && times && times[day] === null ? true : false;
-  console.log(isClosed, day, times, "is closed");
+
   return (
     <Column>
       <FormWrapper>

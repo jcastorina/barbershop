@@ -113,7 +113,7 @@ function App() {
   const [password, setPassword] = useState("");
   const [adminLoginView, setAdminLoginView] = useState(false);
   const [showColors, setShowColors] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
 
   useEffect(() => {
     const pathname = window.location.pathname;

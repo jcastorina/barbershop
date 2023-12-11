@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 function AdminLoginView({
@@ -239,10 +239,59 @@ function AdminLoggedIn({
 
   const [employees, setEmployees] = useState(["Mitch"]);
   const [adminObject, setAdminObject] = useState<ISchedule | null>(null);
-  const [isClosedToday, setIsClosedToday] = useState(false);
-  const [isClosedTomorrow, setIsClosedTomorrow] = useState(false);
+
   const [todayHours, setTodayHours] = useState<number[] | never[] | null>(null);
   const [tomorrowHours, setTomorrowHours] = useState<number[] | never[] | null>(null);
+
+  const [isDirty, setIsDirty] = useState(false);
+
+  // useEffect(() => {}, [isClosedToday, isClosedTomorrow, todayHours, tomorrowHours]);
+
+  // if i type in a closing hour after 6pm, it changes to 6pm onBlur
+  // if i type in a closing hour before the opening hour, it changes to the opening hour onblur
+  // when i click closed, it simply disables the inputs
+  // do a validation check for the isDisabled flag that asserts these rules
+
+  const [todayOpen, setTodayOpen] = useState<number | null>(null);
+  const [todayClosed, setTodayClosed] = useState<number | null>(null);
+  const [tomorrowOpen, setTomorrowOpen] = useState<number | null>(null);
+  const [tomorrowClosed, setTomorrowClosed] = useState<number | null>(null);
+  const [isClosedToday, setIsClosedToday] = useState(false);
+  const [isClosedTomorrow, setIsClosedTomorrow] = useState(false);
+
+  const handleTodayOpenBlur = () => {
+    if (todayOpen && todayOpen < 8) {
+      setTodayOpen(8);
+    }
+    if (todayOpen && todayClosed && todayOpen > todayClosed) {
+      setTodayOpen(todayClosed);
+    }
+  };
+  const handleTodayCloseBlur = () => {
+    if (todayClosed && todayClosed > 17) {
+      setTodayClosed(17);
+    }
+    if (todayClosed && todayOpen && todayClosed < todayOpen) {
+      setTodayClosed(todayOpen);
+    }
+  };
+
+  const handleTomorrowOpenBlur = () => {
+    if (tomorrowOpen && tomorrowOpen < 8) {
+      setTomorrowOpen(8);
+    }
+    if (tomorrowOpen && tomorrowClosed && tomorrowOpen > tomorrowClosed) {
+      setTomorrowOpen(tomorrowClosed);
+    }
+  };
+  const handleTomorrowCloseBlur = () => {
+    if (tomorrowClosed && tomorrowClosed > 17) {
+      setTomorrowClosed(17);
+    }
+    if (tomorrowClosed && tomorrowOpen && tomorrowClosed < tomorrowOpen) {
+      setTomorrowClosed(tomorrowOpen);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -257,20 +306,31 @@ function AdminLoggedIn({
       const adminObjectJSON = await adminResult.text();
       const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
       setAdminObject(adminObject);
+      console.log(adminObject, "dmin");
       if (adminObject.Today.hours === null) {
         setIsClosedToday(true);
       } else {
         setTodayHours(adminObject.Today.hours);
+        if (adminObject.Today.hours.length === 2) {
+          const hours = adminObject.Today.hours;
+          setTodayOpen(hours[0]);
+          setTodayClosed(hours[0]);
+        }
       }
       if (adminObject.Tomorrow.hours === null) {
         setIsClosedTomorrow(true);
+        console.log("null path tomorrow");
       } else {
         setTomorrowHours(adminObject.Tomorrow.hours);
+        if (adminObject.Tomorrow.hours.length === 2) {
+          const hours = adminObject.Tomorrow.hours;
+          setTodayOpen(hours[0]);
+          setTodayClosed(hours[0]);
+        }
       }
     })();
   }, []);
 
-  console.log(adminObject, isClosedToday, isClosedTomorrow, "admin object");
   return (
     <Container className={className}>
       <Fog show={showModal} />
@@ -282,22 +342,68 @@ function AdminLoggedIn({
         <h2>Schedule</h2>
         <div className={"hours-container"}>
           <div>
+            <span>Day:</span>
+            <span>Closed?</span>
+          </div>
+          <br />
+          <div>
             Today:
             <div>
-              <input disabled={isClosedToday} value={todayHours ? todayHours[0] : 0} />
-              <input disabled={isClosedToday} value={todayHours ? todayHours[1] : 0} />
+              <input
+                disabled={isClosedToday}
+                type={"number"}
+                value={todayOpen ?? 8}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+
+                  setTodayOpen(value);
+                }}
+                onBlur={handleTodayOpenBlur}
+              />
+              <input
+                disabled={isClosedToday}
+                type={"number"}
+                value={todayClosed ?? 17}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+
+                  setTodayClosed(value);
+                }}
+                onBlur={handleTodayCloseBlur}
+              />
               <input
                 checked={isClosedToday}
                 type="checkbox"
                 onChange={(e) => setIsClosedToday(Boolean(e.target.checked))}
+                value={Boolean(isClosedToday) ? "on" : "off"}
               />
             </div>
           </div>
           <div>
             Tomorrow:
             <div>
-              <input disabled={isClosedTomorrow} value={tomorrowHours ? tomorrowHours[0] : 0} />
-              <input disabled={isClosedTomorrow} value={tomorrowHours ? tomorrowHours[0] : 0} />
+              <input
+                disabled={isClosedTomorrow}
+                type={"number"}
+                value={tomorrowOpen ?? 8}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+
+                  setTomorrowOpen(value);
+                }}
+                onBlur={handleTomorrowOpenBlur}
+              />
+              <input
+                disabled={isClosedTomorrow}
+                type={"number"}
+                value={tomorrowClosed ?? 17}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+
+                  setTomorrowClosed(value);
+                }}
+                onBlur={handleTomorrowCloseBlur}
+              />
               <input
                 checked={isClosedTomorrow}
                 type="checkbox"
@@ -305,6 +411,7 @@ function AdminLoggedIn({
               />
             </div>
           </div>
+          <button disabled={!isDirty}>Save?</button>
         </div>
       </Container>
       <div className="group-container">

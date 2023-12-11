@@ -47,17 +47,19 @@ const makeHours = (start, hours) => {
 };
 
 const defaultSched = Object.freeze({
-  0: null,
+  0: [8, 24],
   1: null,
   2: [8, 24],
   3: [8, 24],
   4: [8, 24],
-  5: null,
+  5: [8, 24],
   6: [8, 14],
 });
 
 const date = moment().tz(tz);
 const day = date.day();
+
+console.log(day);
 
 const schedule = {
   Today: {
@@ -69,6 +71,8 @@ const schedule = {
     appts: [],
   },
 };
+
+console.log(schedule);
 
 const filterArray = (array1, array2) => {
   let res = [];
