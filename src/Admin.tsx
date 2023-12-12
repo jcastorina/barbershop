@@ -361,7 +361,7 @@ function AdminLoggedIn({
         <StyledModal employee={selected} show={showModal} setShowModal={setShowModal} />
       )}
 
-      <Container className="group-container">
+      <div className="group-container">
         <h2>Schedule</h2>
         <div className={"hours-container"}>
           <div>
@@ -463,7 +463,25 @@ function AdminLoggedIn({
             {isCheckForm ? "Check Form" : "Save?"}
           </SaveButton>
         </div>
-      </Container>
+      </div>
+      <div className="group-container">
+        <h2>View Appointments</h2>
+        <div className="hours-container">
+          <div>
+            <span>Today's: </span>
+            <div>
+              <button>Today</button>
+            </div>
+          </div>
+          <br />
+          <div>
+            <span>Tomorrow's: </span>
+            <div>
+              <button>Tomorrow</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="group-container">
         <h2>Roster</h2>
         <span>
@@ -534,19 +552,19 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
 
   h2 {
     width: 10em;
-    border: 1px solid pink;
+    /* border: 1px solid pink; */
   }
 
   .group-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    margin: 3em;
+    justify-content: center;
+    margin: 0em 3em;
     height: 30em;
     width: 18em;
 
-    border: 1px solid green;
+    /* border: 1px solid green; */
   }
 
   .hours-container {
@@ -555,10 +573,10 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     //  align-items: center;
     justify-content: flex-start;
     // margin: 3em;
-    height: 30em;
+    // height: 20em;
     width: 18em;
 
-    border: 1px solid red;
+    /* border: 1px solid red; */
 
     div {
       margin-left: 2em;
@@ -571,6 +589,13 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
 
       input {
         width: 2em;
+      }
+
+      button {
+        width: 6.5em;
+        height: 2.5em;
+
+        margin: 0;
       }
     }
   }
