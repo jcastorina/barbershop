@@ -194,15 +194,15 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-// const hours = ((start, end) => {
-//   let hours = [];
-
-//   for (let i = start; i < end; i++) {
-//     hours.push(i);
-//   }
-
-//   return hours;
-// })(8, 18);
+const SaveButton = styled.button<{ isCheckForm: boolean }>`
+  height: 3em;
+  width: 9em;
+  align-self: center;
+  margin-top: 8em;
+  border: 1px solid grey;
+  border-radius: 2px;
+  background-color: ${(props) => (props.isCheckForm ? "default;" : "#5BF563;")};
+`;
 
 type IDays = "Today" | "Tomorrow";
 
@@ -245,19 +245,19 @@ function AdminLoggedIn({
 
   const [isDirty, setIsDirty] = useState(false);
 
-  // useEffect(() => {}, [isClosedToday, isClosedTomorrow, todayHours, tomorrowHours]);
+  // useEffect(() => {}, [isTodayClosed, isTomorrowClosed, todayHours, tomorrowHours]);
 
   // if i type in a closing hour after 6pm, it changes to 6pm onBlur
   // if i type in a closing hour before the opening hour, it changes to the opening hour onblur
   // when i click closed, it simply disables the inputs
   // do a validation check for the isDisabled flag that asserts these rules
 
-  const [todayOpen, setTodayOpen] = useState<number | null>(null);
-  const [todayClosed, setTodayClosed] = useState<number | null>(null);
-  const [tomorrowOpen, setTomorrowOpen] = useState<number | null>(null);
-  const [tomorrowClosed, setTomorrowClosed] = useState<number | null>(null);
-  const [isClosedToday, setIsClosedToday] = useState(false);
-  const [isClosedTomorrow, setIsClosedTomorrow] = useState(false);
+  const [todayOpen, setTodayOpen] = useState<number>(8);
+  const [todayClosed, setTodayClosed] = useState<number>(17);
+  const [tomorrowOpen, setTomorrowOpen] = useState<number>(8);
+  const [tomorrowClosed, setTomorrowClosed] = useState<number>(17);
+  const [isTodayClosed, setIsTodayClosed] = useState(false);
+  const [isTomorrowClosed, setIsTomorrowClosed] = useState(false);
 
   const handleTodayOpenBlur = () => {
     if (todayOpen && todayOpen < 8) {
@@ -302,34 +302,57 @@ function AdminLoggedIn({
       //   setEmployees(employees);
       // }
 
-      const adminResult = await fetch("http://127.0.0.1:3001/adminObject");
+      const adminResult = await fetch(`${process.env.REACT_APP_URL}/adminObject`);
       const adminObjectJSON = await adminResult.text();
       const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
       setAdminObject(adminObject);
-      console.log(adminObject, "dmin");
+
       if (adminObject.Today.hours === null) {
-        setIsClosedToday(true);
+        setIsTodayClosed(true);
       } else {
         setTodayHours(adminObject.Today.hours);
         if (adminObject.Today.hours.length === 2) {
           const hours = adminObject.Today.hours;
           setTodayOpen(hours[0]);
-          setTodayClosed(hours[0]);
+          setTodayClosed(hours[1]);
         }
       }
       if (adminObject.Tomorrow.hours === null) {
-        setIsClosedTomorrow(true);
-        console.log("null path tomorrow");
+        setIsTomorrowClosed(true);
       } else {
         setTomorrowHours(adminObject.Tomorrow.hours);
         if (adminObject.Tomorrow.hours.length === 2) {
           const hours = adminObject.Tomorrow.hours;
-          setTodayOpen(hours[0]);
-          setTodayClosed(hours[0]);
+          setTomorrowOpen(hours[0]);
+          setTomorrowClosed(hours[1]);
         }
       }
     })();
   }, []);
+
+  const [isCheckForm, setIsCheckForm] = useState(true);
+
+  const handleSave = async () => {
+    const Today = { hours: isTodayClosed ? null : [todayOpen, todayClosed] };
+    const Tomorrow = { hours: isTomorrowClosed ? null : [tomorrowOpen, tomorrowClosed] };
+
+    const request = JSON.stringify({ Today, Tomorrow });
+
+    setIsCheckForm(true);
+
+    try {
+      await fetch(`${process.env.REACT_APP_URL}/adminUpdateSchedule`, {
+        method: "post",
+        body: request,
+      });
+    } catch (e) {
+    } finally {
+    }
+  };
+
+  const handleFocus = () => {
+    setIsCheckForm(true);
+  };
 
   return (
     <Container className={className}>
@@ -350,32 +373,40 @@ function AdminLoggedIn({
             Today:
             <div>
               <input
-                disabled={isClosedToday}
+                disabled={isTodayClosed}
                 type={"number"}
-                value={todayOpen ?? 8}
+                value={todayOpen}
                 onChange={(e) => {
+                  setIsCheckForm(true);
                   const value = parseInt(e.target.value);
 
                   setTodayOpen(value);
                 }}
                 onBlur={handleTodayOpenBlur}
+                onFocus={handleFocus}
               />
               <input
-                disabled={isClosedToday}
+                disabled={isTodayClosed}
                 type={"number"}
-                value={todayClosed ?? 17}
+                value={todayClosed}
                 onChange={(e) => {
+                  setIsCheckForm(true);
                   const value = parseInt(e.target.value);
 
                   setTodayClosed(value);
                 }}
                 onBlur={handleTodayCloseBlur}
+                onFocus={handleFocus}
               />
               <input
-                checked={isClosedToday}
+                checked={isTodayClosed}
                 type="checkbox"
-                onChange={(e) => setIsClosedToday(Boolean(e.target.checked))}
-                value={Boolean(isClosedToday) ? "on" : "off"}
+                onChange={(e) => {
+                  setIsCheckForm(true);
+                  setIsTodayClosed(Boolean(e.target.checked));
+                }}
+                value={Boolean(isTodayClosed) ? "on" : "off"}
+                onFocus={handleFocus}
               />
             </div>
           </div>
@@ -383,35 +414,54 @@ function AdminLoggedIn({
             Tomorrow:
             <div>
               <input
-                disabled={isClosedTomorrow}
+                disabled={isTomorrowClosed}
                 type={"number"}
-                value={tomorrowOpen ?? 8}
+                value={tomorrowOpen}
                 onChange={(e) => {
+                  setIsCheckForm(true);
                   const value = parseInt(e.target.value);
 
                   setTomorrowOpen(value);
                 }}
                 onBlur={handleTomorrowOpenBlur}
+                onFocus={handleFocus}
               />
               <input
-                disabled={isClosedTomorrow}
+                disabled={isTomorrowClosed}
                 type={"number"}
-                value={tomorrowClosed ?? 17}
+                value={tomorrowClosed}
                 onChange={(e) => {
+                  setIsCheckForm(true);
                   const value = parseInt(e.target.value);
 
                   setTomorrowClosed(value);
                 }}
                 onBlur={handleTomorrowCloseBlur}
+                onFocus={handleFocus}
               />
               <input
-                checked={isClosedTomorrow}
+                checked={isTomorrowClosed}
                 type="checkbox"
-                onChange={(e) => setIsClosedTomorrow(Boolean(e.target.checked))}
+                onChange={(e) => {
+                  setIsCheckForm(true);
+                  setIsTomorrowClosed(Boolean(e.target.checked));
+                }}
+                onFocus={handleFocus}
               />
             </div>
           </div>
-          <button disabled={!isDirty}>Save?</button>
+          <SaveButton
+            isCheckForm={isCheckForm}
+            onClick={async () => {
+              if (!isCheckForm) {
+                await handleSave();
+              } else {
+                setIsCheckForm(false);
+              }
+            }}
+          >
+            {isCheckForm ? "Check Form" : "Save?"}
+          </SaveButton>
         </div>
       </Container>
       <div className="group-container">
@@ -435,7 +485,6 @@ function AdminLoggedIn({
                 });
                 const text = await result.text();
                 setAddEmployee("");
-                console.log(text);
               }
             }}
           >

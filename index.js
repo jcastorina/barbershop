@@ -47,19 +47,17 @@ const makeHours = (start, hours) => {
 };
 
 const defaultSched = Object.freeze({
-  0: [8, 24],
+  0: [8, 17],
   1: null,
-  2: [8, 24],
-  3: [8, 24],
-  4: [8, 24],
-  5: [8, 24],
+  2: [8, 17],
+  3: [8, 17],
+  4: [8, 17],
+  5: [8, 17],
   6: [8, 14],
 });
 
 const date = moment().tz(tz);
 const day = date.day();
-
-console.log(day);
 
 const schedule = {
   Today: {
@@ -71,8 +69,6 @@ const schedule = {
     appts: [],
   },
 };
-
-console.log(schedule);
 
 const filterArray = (array1, array2) => {
   let res = [];
@@ -138,6 +134,18 @@ app.get("/clientObject", (req, res) => {
 
 app.get("/adminObject", (req, res) => {
   res.write(JSON.stringify(schedule));
+  return res.end();
+});
+
+app.post("/adminUpdateSchedule", (req, res) => {
+  const result = JSON.parse(req.body);
+
+  const { Today, Tomorrow } = result;
+
+  schedule.Today.hours = Today.hours;
+  schedule.Tomorrow.hours = Tomorrow.hours;
+
+  res.status(200);
   return res.end();
 });
 
