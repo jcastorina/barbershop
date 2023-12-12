@@ -125,8 +125,6 @@ app.post("/addEmployee", (req, res) => {
 });
 
 app.get("/adminTimeList", (req, res) => {
-  console.log("requesting time list");
-
   refreshHours(tz);
 
   res.write(JSON.stringify(hours));
@@ -186,8 +184,6 @@ const appts = {
   Today: buildSchedArray(),
   Tomorrow: buildSchedArray(),
 };
-
-console.log(appts);
 
 app.get("/times", (req, res) => {
   const _appt = appts.Today.map((item) => item.time);

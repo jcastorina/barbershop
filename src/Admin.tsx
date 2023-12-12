@@ -204,6 +204,209 @@ const SaveButton = styled.button<{ isCheckForm: boolean }>`
   background-color: ${(props) => (props.isCheckForm ? "default;" : "#5BF563;")};
 `;
 
+const getTodayAppts = async () => {
+  try {
+    const result = await fetch(`${process.env.REACT_APP_URL}/adminTodayAppts`);
+    const string = await result.text();
+    const todayAppts = JSON.parse(string);
+    return todayAppts;
+  } catch (e) {
+    return [];
+  }
+};
+
+const getTomorrowAppts = async () => {
+  try {
+    const result = await fetch(`${process.env.REACT_APP_URL}/adminTomorrowAppts`);
+    const string = await result.text();
+    const todayAppts = JSON.parse(string);
+    return todayAppts;
+  } catch (e) {
+    return [];
+  }
+};
+
+const formatPhoneNumber = (string: string) => {
+  if (string.length === 10) {
+    return `${string.slice(0, 3)}-${string.slice(3, 6)}-${string.slice(6, 10)}`;
+  }
+};
+
+const Appointment = ({
+  appointment,
+  className,
+}: {
+  appointment: IAppointmentRecord;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <div className={"column"}>
+        <span>Name: </span>
+        <span>Phone: </span>
+        <span>Time: </span>
+      </div>
+      <div className={"column item"}>
+        <div>{appointment.name}</div>
+        <div>{formatPhoneNumber(appointment.phone)}</div>
+        <div>{appointment.time}</div>
+      </div>
+    </div>
+  );
+};
+
+const StyledAppointment = styled(Appointment)`
+  display: flex;
+  flex-direction: row;
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    margin: 1em;
+
+    div,
+    span {
+      margin: 0.3em;
+    }
+
+    div {
+      font-weight: bold;
+    }
+  }
+`;
+
+const Selector = ({
+  canBack,
+  canForward,
+  setIndex,
+  className,
+}: {
+  canBack: boolean;
+  canForward: boolean;
+  setIndex: (index: number | ((index: number) => number)) => void;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <span
+        className={canBack ? "enabled" : ""}
+        onClick={() => {
+          if (canBack) {
+            setIndex((index) => index - 1);
+          }
+        }}
+      >
+        {"<"}
+      </span>
+      <span
+        className={canForward ? "enabled" : ""}
+        onClick={() => {
+          if (canForward) {
+            setIndex((index) => index + 1);
+          }
+        }}
+      >
+        {">"}
+      </span>
+    </div>
+  );
+};
+
+const StyledSelector = styled(Selector)`
+  width: 10em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  margin-left: 3em;
+
+  span {
+    font-size: 2em;
+    font-weight: bold;
+    color: lightgray;
+  }
+  .enabled {
+    color: black;
+    cursor: pointer;
+  }
+`;
+
+const AppointmentView = ({
+  day,
+  setShow,
+  className,
+}: {
+  day: "Today" | "Tomorrow";
+  setShow: (show: boolean) => void;
+  className?: string;
+}) => {
+  const [appts, setAppts] = useState<IAppointmentRecord[] | [] | null>(null);
+
+  useEffect(() => {
+    if (day === "Today") {
+      getTodayAppts().then((appts) => setAppts(appts));
+    } else if (day === "Tomorrow") {
+      getTomorrowAppts().then((appts) => setAppts(appts));
+    }
+  }, []);
+
+  const [index, setIndex] = useState(0);
+
+  const canBack = appts?.length && index > 0 ? true : false;
+  const canForward = appts?.length && index < appts.length - 1 ? true : false;
+
+  return (
+    <div className={className}>
+      <h2>{day}'s&nbsp;Appointments</h2>
+      {appts && appts.length > 0 && (
+        <>
+          <StyledAppointment appointment={appts[index]} />
+          <StyledSelector canBack={canBack} canForward={canForward} setIndex={setIndex} />
+        </>
+      )}
+      {appts && appts.length === 0 && (
+        <div className={"no-appointments"}>No appointments to show!</div>
+      )}
+      <button
+        className={"close-button"}
+        onClick={() => {
+          setShow(false);
+        }}
+      >
+        Close
+      </button>
+    </div>
+  );
+};
+
+const StyledAppointmentView = styled(AppointmentView)`
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 5;
+  background-color: white;
+
+  h2 {
+    margin-left: 1em;
+  }
+
+  .no-appointments {
+    font-size: 18px;
+
+    height: 15em;
+
+    margin-left: 5em;
+    margin-top: 3em;
+  }
+
+  .close-button {
+    margin-left: 8em;
+
+    width: 5.5em;
+    height: 2.5em;
+  }
+`;
+
 type IDays = "Today" | "Tomorrow";
 
 type IAppointmentRecord = {
@@ -238,14 +441,6 @@ function AdminLoggedIn({
   const [selected, setSelected] = useState("");
 
   const [employees, setEmployees] = useState(["Mitch"]);
-  const [adminObject, setAdminObject] = useState<ISchedule | null>(null);
-
-  const [todayHours, setTodayHours] = useState<number[] | never[] | null>(null);
-  const [tomorrowHours, setTomorrowHours] = useState<number[] | never[] | null>(null);
-
-  const [isDirty, setIsDirty] = useState(false);
-
-  // useEffect(() => {}, [isTodayClosed, isTomorrowClosed, todayHours, tomorrowHours]);
 
   // if i type in a closing hour after 6pm, it changes to 6pm onBlur
   // if i type in a closing hour before the opening hour, it changes to the opening hour onblur
@@ -305,12 +500,10 @@ function AdminLoggedIn({
       const adminResult = await fetch(`${process.env.REACT_APP_URL}/adminObject`);
       const adminObjectJSON = await adminResult.text();
       const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
-      setAdminObject(adminObject);
 
       if (adminObject.Today.hours === null) {
         setIsTodayClosed(true);
       } else {
-        setTodayHours(adminObject.Today.hours);
         if (adminObject.Today.hours.length === 2) {
           const hours = adminObject.Today.hours;
           setTodayOpen(hours[0]);
@@ -320,7 +513,6 @@ function AdminLoggedIn({
       if (adminObject.Tomorrow.hours === null) {
         setIsTomorrowClosed(true);
       } else {
-        setTomorrowHours(adminObject.Tomorrow.hours);
         if (adminObject.Tomorrow.hours.length === 2) {
           const hours = adminObject.Tomorrow.hours;
           setTomorrowOpen(hours[0]);
@@ -354,13 +546,21 @@ function AdminLoggedIn({
     setIsCheckForm(true);
   };
 
+  const [isTodayAppointmentView, setIsTodayAppointmentView] = useState(false);
+  const [isTomorrowAppointmentView, setIsTomorrowAppointmentView] = useState(false);
+
   return (
     <Container className={className}>
       <Fog show={showModal} />
       {showModal && (
         <StyledModal employee={selected} show={showModal} setShowModal={setShowModal} />
       )}
-
+      {isTodayAppointmentView && (
+        <StyledAppointmentView day={"Today"} setShow={setIsTodayAppointmentView} />
+      )}
+      {isTomorrowAppointmentView && (
+        <StyledAppointmentView day={"Tomorrow"} setShow={setIsTomorrowAppointmentView} />
+      )}
       <div className="group-container">
         <h2>Schedule</h2>
         <div className={"hours-container"}>
@@ -470,14 +670,31 @@ function AdminLoggedIn({
           <div>
             <span>Today's: </span>
             <div>
-              <button>Today</button>
+              <button
+                onClick={() => {
+                  // console.log("clicked");
+                  // const today = await getTodayAppts();
+                  // setTodayAppts(today);
+                  setIsTodayAppointmentView(true);
+                }}
+              >
+                Today
+              </button>
             </div>
           </div>
           <br />
           <div>
             <span>Tomorrow's: </span>
             <div>
-              <button>Tomorrow</button>
+              <button
+                onClick={async () => {
+                  // const tomorrow = await getTomorrowAppts();
+                  // setTomorrowAppts(tomorrow);
+                  setIsTomorrowAppointmentView(true);
+                }}
+              >
+                Tomorrow
+              </button>
             </div>
           </div>
         </div>
@@ -579,8 +796,8 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     /* border: 1px solid red; */
 
     div {
-      margin-left: 2em;
-      margin-right: 1em;
+      /* margin-left: 2em;
+      margin-right: 1em; */
       //width: 12em;
       display: flex;
       flex-direction: row;
@@ -588,7 +805,7 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
       justify-content: space-between;
 
       input {
-        width: 2em;
+        width: 3em;
       }
 
       button {

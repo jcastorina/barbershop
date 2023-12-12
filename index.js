@@ -149,6 +149,16 @@ app.post("/adminUpdateSchedule", (req, res) => {
   return res.end();
 });
 
+app.get("/adminTodayAppts", (req, res) => {
+  res.write(JSON.stringify(schedule.Today.appts));
+  return res.end();
+});
+
+app.get("/adminTomorrowAppts", (req, res) => {
+  res.write(JSON.stringify(schedule.Tomorrow.appts));
+  return res.end();
+});
+
 app.post("/newAppointment", (req, res) => {
   const result = JSON.parse(req.body);
 
@@ -173,8 +183,6 @@ app.post("/newAppointment", (req, res) => {
   };
 
   schedule[day].appts.push(appointmentRecord);
-
-  console.log(appointmentRecord, "appt record");
 
   res.status(200);
   return res.end();
