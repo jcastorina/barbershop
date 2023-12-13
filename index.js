@@ -1,9 +1,11 @@
 const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
+const path = require("path");
 
 const app = express();
 
+app.use(express.static(path.join(__dirname, "build")));
 app.use(cors({ optionsSuccessStatus: 200, origin: "*" }));
 app.use(express.text());
 
@@ -199,4 +201,8 @@ app.post("/loginAdmin", (req, res) => {
   }
   res.status(401);
   return res.end();
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname + "/build/index.html"));
 });
