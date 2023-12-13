@@ -269,6 +269,17 @@ const StyledPhoneNumber = styled(PhoneNumber)`
   input::placeholder {
     font-size: ${inputFontSize * 0.8}em;
   }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 `;
 
 const StyledDays = styled(Days)`
