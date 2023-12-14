@@ -438,7 +438,7 @@ function AdminLoggedIn({
 }) {
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, setAddEmployee] = useState("");
-  const [selected, setSelected] = useState("");
+  const [selected] = useState("");
 
   // const [employees, setEmployees] = useState(["Mitch"]);
 
