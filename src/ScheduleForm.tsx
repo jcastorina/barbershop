@@ -451,7 +451,7 @@ export function ScheduleForm({
   showForm: boolean;
   setShowForm: (show: boolean) => void;
 }) {
-  const [barber, _] = useState("Mitch");
+  const [barber] = useState("Mitch");
   const [day, setDay] = useState<IDays | null>(null);
   const [days, setDays] = useState<IDays[] | null>(null);
   const [time, setTime] = useState<string | null>(null);

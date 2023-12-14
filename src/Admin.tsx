@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 
 function AdminLoginView({
@@ -348,7 +348,7 @@ const AppointmentView = ({
     } else if (day === "Tomorrow") {
       getTomorrowAppts().then((appts) => setAppts(appts));
     }
-  }, []);
+  }, [day]);
 
   const [index, setIndex] = useState(0);
 
@@ -440,7 +440,7 @@ function AdminLoggedIn({
   const [addEmployee, setAddEmployee] = useState("");
   const [selected, setSelected] = useState("");
 
-  const [employees, setEmployees] = useState(["Mitch"]);
+  // const [employees, setEmployees] = useState(["Mitch"]);
 
   // if i type in a closing hour after 6pm, it changes to 6pm onBlur
   // if i type in a closing hour before the opening hour, it changes to the opening hour onblur
@@ -707,26 +707,26 @@ function AdminLoggedIn({
             value={addEmployee}
             onChange={(e) => setAddEmployee(e.target.value)}
             style={{ marginBottom: "1.3em" }}
-            disabled={employees.length > 4}
+            // disabled={employees.length > 4}
           />
           <button
-            disabled={!addEmployee || employees.length > 4}
-            onClick={async () => {
-              if (addEmployee) {
-                const result = await fetch("http://127.0.0.2:3001/addEmployee", {
-                  method: "post",
-                  headers: { "Content-Type": "text/plain" },
-                  body: addEmployee,
-                });
-                const text = await result.text();
-                setAddEmployee("");
-              }
-            }}
+          // disabled={!addEmployee || employees.length > 4}
+          // onClick={async () => {
+          //   if (addEmployee) {
+          //     const result = await fetch("http://127.0.0.2:3001/addEmployee", {
+          //       method: "post",
+          //       headers: { "Content-Type": "text/plain" },
+          //       body: addEmployee,
+          //     });
+          //     const text = await result.text();
+          //     setAddEmployee("");
+          //   }
+          // }}
           >
             Add
           </button>
         </span>
-        {employees.length
+        {/* {employees.length
           ? employees.map((employee) => (
               <div>
                 <b>
@@ -742,7 +742,7 @@ function AdminLoggedIn({
                 </button>
               </div>
             ))
-          : "No employees found"}
+          : "No employees found"} */}
         <br />
         <br />
         <button
