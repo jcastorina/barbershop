@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
-import { colors, isNumeric } from "./utilities";
+import { colors } from "./utilities";
 
 const selectorFontSize = "1em";
 const inputFontSize = 1.05;
@@ -33,8 +33,6 @@ const StartColumn = styled.div<{ marginTop?: number }>`
   justify-content: space-between;
 `;
 
-const delay = (ms: number, cb: () => void) => setTimeout(cb, ms);
-
 const Name = ({
   name,
   setName,
@@ -47,17 +45,15 @@ const Name = ({
   const nameRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
-    const isAlphabetic = /^[A-Za-z\s'\.\-,]+$/.test(e.target.value);
+    const isAlphabetic = /^[A-Za-z\s'.\-,]+$/.test(e.target.value);
     if (isAlphabetic || e.target.value === "") {
       setter(e.target.value);
     }
   };
 
   useEffect(() => {
-    if (nameRef.current) {
-      nameRef.current.focus();
-    }
-  }, [nameRef.current]);
+    nameRef.current?.focus();
+  }, []);
 
   return (
     <div className={className}>
@@ -106,7 +102,7 @@ const PhoneNumber = ({
 
   useEffect(() => {
     setPhone(areaCode + prefix + suffix);
-  }, [areaCode, prefix, suffix]);
+  }, [areaCode, prefix, suffix, setPhone]);
 
   return (
     <div className={className}>
@@ -455,7 +451,7 @@ export function ScheduleForm({
   showForm: boolean;
   setShowForm: (show: boolean) => void;
 }) {
-  const [barber, setBarber] = useState("Mitch");
+  const [barber, _] = useState("Mitch");
   const [day, setDay] = useState<IDays | null>(null);
   const [days, setDays] = useState<IDays[] | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -463,7 +459,7 @@ export function ScheduleForm({
   const [phone, setPhone] = useState("");
   const [times, setTimes] = useState<ITimesObject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  // const [hasError, setHasError] = useState(false);
 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
@@ -491,7 +487,7 @@ export function ScheduleForm({
         setDays(days as IDays[]);
         setTimes(timesObject);
       } catch (e) {
-        setHasError(true);
+        // setHasError(true);
       } finally {
         setIsLoading(false);
       }
@@ -506,8 +502,6 @@ export function ScheduleForm({
       setTime(null);
     }
   }, [times, day, days]);
-
-  const isClosed = day && times && times[day] === null ? true : false;
 
   return (
     <Column>
