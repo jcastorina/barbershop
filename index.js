@@ -127,7 +127,40 @@ const getAvailableTimes = (schedule) => {
   return { Today, Tomorrow };
 };
 
+let lastRequestTimestamp = moment.tz(tz).format();
+
+const checkDayElapsed = (tz) => {
+  const lastRequestTime = moment(lastRequestTimestamp);
+
+  const currentTime = moment().tz(tz);
+
+  const daysElapsed = currentTime.diff(lastRequestTime, "days");
+
+  console.log(daysElapsed);
+  lastRequestTimestamp = currentTime.format();
+  if (daysElapsed >= 1) {
+    if (daysElapsed === 1) {
+      schedule.Today = { ...schedule.Tomorrow };
+      const newDayTomorrow = defaultSched[(currentTime.day + 1) % 7]
+        ? [...defaultSched[(currentTime.day + 1) % 7]]
+        : null;
+      schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
+    } else {
+      const newDayToday = defaultSched[currentTime.day] ? [...defaultSched[currentTime.day]] : null;
+      const newDayTomorrow = defaultSched[(currentTime.day + 1) % 7]
+        ? [...defaultSched[(currentTime.day + 1) % 7]]
+        : null;
+      schedule.Today = { hours: newDayToday, appts: [] };
+      schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
+    }
+    return daysElapsed;
+  } else {
+    return 0;
+  }
+};
+
 app.get("/clientObject", (req, res) => {
+  checkDayElapsed(tz);
   const timesObject = getAvailableTimes(schedule);
 
   res.write(JSON.stringify(timesObject));
@@ -135,11 +168,13 @@ app.get("/clientObject", (req, res) => {
 });
 
 app.get("/adminObject", (req, res) => {
+  checkDayElapsed(tz);
   res.write(JSON.stringify(schedule));
   return res.end();
 });
 
 app.post("/adminUpdateSchedule", (req, res) => {
+  checkDayElapsed(tz);
   const result = JSON.parse(req.body);
 
   const { Today, Tomorrow } = result;
@@ -148,16 +183,6 @@ app.post("/adminUpdateSchedule", (req, res) => {
   schedule.Tomorrow.hours = Tomorrow.hours;
 
   res.status(200);
-  return res.end();
-});
-
-app.get("/adminTodayAppts", (req, res) => {
-  res.write(JSON.stringify(schedule.Today.appts));
-  return res.end();
-});
-
-app.get("/adminTomorrowAppts", (req, res) => {
-  res.write(JSON.stringify(schedule.Tomorrow.appts));
   return res.end();
 });
 
@@ -201,8 +226,4 @@ app.post("/loginAdmin", (req, res) => {
   }
   res.status(401);
   return res.end();
-});
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname + "/build/index.html"));
 });

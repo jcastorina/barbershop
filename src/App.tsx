@@ -43,6 +43,8 @@ const Footer = styled.div`
   display: grid;
   place-items: center;
 
+  font-style: italic;
+
   box-shadow: 0px -1px 3px ${colors.milGreen};
   //  min-width: 32em;
 `;
@@ -173,7 +175,7 @@ function App() {
           {showForm && <ScheduleForm showForm={showForm} setShowForm={setShowForm} />}
         </Content>
       </ResponsiveWrapper>
-      <Footer>Yanni</Footer>
+      <Footer>Proudly serving since 2013</Footer>
     </AppView>
   );
 }
