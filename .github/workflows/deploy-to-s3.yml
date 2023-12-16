@@ -26,6 +26,8 @@ jobs:
           node-version: "16"
 
       - name: Build React App
+        env:
+          REACT_APP_URL: ${{ secrets.REACT_APP_URL }}
         run: |
           npm install
           npm run build
