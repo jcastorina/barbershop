@@ -2,8 +2,15 @@ const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
 const path = require("path");
+// const https = require("https");
+// const fs = require("fs");
 
 const app = express();
+
+// const httpsOptions = {
+//   cert: fs.readFileSync(path.join(__dirname, "---")),
+//   key: fs.readFileSync(path.join(__dirname, "---")),
+// };
 
 app.use(express.static(path.join(__dirname, "build")));
 app.use(cors({ optionsSuccessStatus: 200, origin: "*" }));
@@ -12,7 +19,13 @@ app.use(express.text());
 const PORT = 3001;
 const tz = "America/Los_Angeles";
 
+// THIS ONLY GETS USED LOCALLY NOW
+// DEPLOYED EXPRESS USES https
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+
+// https.createServer(httpsOptions, app).listen(PORT, function () {
+//   console.log(`Express server listening on port ${PORT}`);
+// });
 
 const filterTimesAfterCurrent = (timesArray, tz) => {
   const currentTime = moment().tz(tz);
