@@ -459,7 +459,6 @@ export function ScheduleForm({
   const [phone, setPhone] = useState("");
   const [times, setTimes] = useState<ITimesObject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  // const [hasError, setHasError] = useState(false);
 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
@@ -487,7 +486,6 @@ export function ScheduleForm({
         setDays(days as IDays[]);
         setTimes(timesObject);
       } catch (e) {
-        // setHasError(true);
       } finally {
         setIsLoading(false);
       }
@@ -516,7 +514,6 @@ export function ScheduleForm({
               <StyledTimes time={time} setTime={setTime} times={times[day]!} />
             )) ||
               (day && <StyledNotTakingAppointments day={day} />)}
-            {/* {isClosed && day && <StyledNotTakingAppointments day={day} />} */}
             <StyledConfirm
               disabled={isNotReady()}
               onClick={async () => {

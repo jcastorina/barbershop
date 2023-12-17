@@ -87,34 +87,23 @@ const ButtonContainer = styled.div`
   @media (min-width: 768px) {
     flex-direction: row;
     justify-content: center;
-
     gap: 10px;
   }
 
   @media (max-width: 768px) {
-    margin-top: 4em;
   }
 
   @media (min-height: 600px) {
-    //margin-top: 40em;
     height: 24em;
     align-self: center;
-
-    // flex-direction: column;
     justify-content: center;
   }
-
-  /* @media (max-width: 768px) {
-    justify-content: center;
-  } */
 `;
 
 function App() {
-  // const [needsUpdate, setNeedsUpdate] = useState(false);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
   const [adminLoginView, setAdminLoginView] = useState(false);
-  // const [showColors, setShowColors] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {

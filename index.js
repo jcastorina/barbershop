@@ -186,6 +186,16 @@ app.get("/adminObject", (req, res) => {
   return res.end();
 });
 
+app.get("/adminTodayAppts", (req, res) => {
+  res.write(JSON.stringify(schedule.Today.appts));
+  return res.end();
+});
+
+app.get("/adminTomorrowAppts", (req, res) => {
+  res.write(JSON.stringify(schedule.Tomorrow.appts));
+  return res.end();
+});
+
 app.post("/adminUpdateSchedule", (req, res) => {
   checkDayElapsed(tz);
   const result = JSON.parse(req.body);
