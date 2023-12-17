@@ -1,6 +1,7 @@
 const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
+const { networkInterfaces } = require("os");
 const path = require("path");
 // const https = require("https");
 // const fs = require("fs");
@@ -62,14 +63,16 @@ const makeHours = (start, hours) => {
 };
 
 const defaultSched = Object.freeze({
-  0: [8, 17],
+  0: null,
   1: null,
-  2: [8, 17],
-  3: [8, 17],
-  4: [8, 17],
-  5: [8, 17],
+  2: [8, 18],
+  3: [8, 18],
+  4: [8, 18],
+  5: [8, 18],
   6: [8, 14],
 });
+
+const defaultHours = makeHours(8, 18);
 
 const date = moment().tz(tz);
 const day = date.day();
@@ -81,7 +84,12 @@ const schedule = {
   },
   Tomorrow: {
     hours: day !== 0 || day !== 1 ? defaultSched[((day + 1) % 7).toString()] : null,
-    appts: [],
+    appts: [
+      // { name: "joe", phone: 1234567890, time: "10:30 AM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "9:30 AM", barber: "mitch" },
+      // { name: "jooe", phone: 2234657890, time: "3:30 PM", barber: "mitch" },
+      // { name: "jsadgooe", phone: 2234659990, time: "1:30 PM", barber: "mitch" },
+    ],
   },
 };
 
@@ -100,6 +108,14 @@ const filterArray = (array1, array2) => {
     }
   }
   return res;
+};
+
+const removeTime = (times, time) => {
+  const idx = times.indexOf(time);
+  if (!idx) {
+    return null;
+  }
+  return [...times.slice(0, idx), ...times.slice(idx + 1, times.length)];
 };
 
 const getAvailableTimes = (schedule) => {
@@ -128,6 +144,12 @@ const getAvailableTimes = (schedule) => {
         today.map((appt) => appt.time)
       );
     }
+    if (todayHoursRange && todayHoursRange[1] >= 15) {
+      const removedArray = removeTime(Today, "11:30 AM");
+      if (removedArray) {
+        Today = removedArray;
+      }
+    }
   }
 
   if (Tomorrow && tomorrow.length) {
@@ -136,11 +158,19 @@ const getAvailableTimes = (schedule) => {
       tomorrow.map((appt) => appt.time)
     );
   }
+  if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
+    const removedArray = removeTime(Tomorrow, "11:30 AM");
+    if (removedArray) {
+      Tomorrow = removedArray;
+    }
+  }
 
   return { Today, Tomorrow };
 };
 
 let lastRequestTimestamp = moment.tz(tz).format();
+
+// let m = moment.tz(tz).add(1, "days");
 
 const checkDayElapsed = (tz) => {
   const lastRequestTime = moment(lastRequestTimestamp);
@@ -149,22 +179,24 @@ const checkDayElapsed = (tz) => {
 
   const daysElapsed = currentTime.diff(lastRequestTime, "days");
 
-  console.log(daysElapsed);
   lastRequestTimestamp = currentTime.format();
   if (daysElapsed >= 1) {
     if (daysElapsed === 1) {
       schedule.Today = { ...schedule.Tomorrow };
-      const newDayTomorrow = defaultSched[(currentTime.day + 1) % 7]
-        ? [...defaultSched[(currentTime.day + 1) % 7]]
+      const newDayTomorrow = defaultSched[(currentTime.day() + 1) % 7]
+        ? [...defaultSched[(currentTime.day() + 1) % 7]]
         : null;
       schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
     } else {
-      const newDayToday = defaultSched[currentTime.day] ? [...defaultSched[currentTime.day]] : null;
-      const newDayTomorrow = defaultSched[(currentTime.day + 1) % 7]
-        ? [...defaultSched[(currentTime.day + 1) % 7]]
+      const newDayToday = defaultSched[currentTime.day()]
+        ? [...defaultSched[currentTime.day()]]
+        : null;
+      const newDayTomorrow = defaultSched[(currentTime.day() + 1) % 7]
+        ? [...defaultSched[(currentTime.day() + 1) % 7]]
         : null;
       schedule.Today = { hours: newDayToday, appts: [] };
       schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
+      console.log(daysElapsed, schedule, "2 days");
     }
     return daysElapsed;
   } else {
@@ -187,12 +219,28 @@ app.get("/adminObject", (req, res) => {
 });
 
 app.get("/adminTodayAppts", (req, res) => {
-  res.write(JSON.stringify(schedule.Today.appts));
+  checkDayElapsed(tz);
+
+  const sorted = schedule.Today.appts.sort((a, b) => {
+    const h1 = defaultHours.indexOf(a.time);
+    const h2 = defaultHours.indexOf(b.time);
+    return h1 - h2;
+  });
+  res.write(JSON.stringify(sorted));
+
   return res.end();
 });
 
 app.get("/adminTomorrowAppts", (req, res) => {
-  res.write(JSON.stringify(schedule.Tomorrow.appts));
+  checkDayElapsed(tz);
+
+  const sorted = schedule.Tomorrow.appts.sort((a, b) => {
+    const h1 = defaultHours.indexOf(a.time);
+    const h2 = defaultHours.indexOf(b.time);
+    return h1 - h2;
+  });
+  res.write(JSON.stringify(sorted));
+
   return res.end();
 });
 

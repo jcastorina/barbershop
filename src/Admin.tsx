@@ -448,9 +448,9 @@ function AdminLoggedIn({
   // do a validation check for the isDisabled flag that asserts these rules
 
   const [todayOpen, setTodayOpen] = useState<number>(8);
-  const [todayClosed, setTodayClosed] = useState<number>(17);
+  const [todayClosed, setTodayClosed] = useState<number>(18);
   const [tomorrowOpen, setTomorrowOpen] = useState<number>(8);
-  const [tomorrowClosed, setTomorrowClosed] = useState<number>(17);
+  const [tomorrowClosed, setTomorrowClosed] = useState<number>(18);
   const [isTodayClosed, setIsTodayClosed] = useState(false);
   const [isTomorrowClosed, setIsTomorrowClosed] = useState(false);
 
@@ -463,8 +463,8 @@ function AdminLoggedIn({
     }
   };
   const handleTodayCloseBlur = () => {
-    if (todayClosed && todayClosed > 17) {
-      setTodayClosed(17);
+    if (todayClosed && todayClosed > 18) {
+      setTodayClosed(18);
     }
     if (todayClosed && todayOpen && todayClosed < todayOpen) {
       setTodayClosed(todayOpen);
@@ -480,8 +480,8 @@ function AdminLoggedIn({
     }
   };
   const handleTomorrowCloseBlur = () => {
-    if (tomorrowClosed && tomorrowClosed > 17) {
-      setTomorrowClosed(17);
+    if (tomorrowClosed && tomorrowClosed > 18) {
+      setTomorrowClosed(18);
     }
     if (tomorrowClosed && tomorrowOpen && tomorrowClosed < tomorrowOpen) {
       setTomorrowClosed(tomorrowOpen);
