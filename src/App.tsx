@@ -158,7 +158,7 @@ function App() {
               >
                 GET DIRECTIONS
               </Anchor>
-              <Anchor href={"tel:+1-612-524-8519"}>CALL NOW</Anchor>
+              <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
             </ButtonContainer>
           )}
           {showForm && <ScheduleForm showForm={showForm} setShowForm={setShowForm} />}
