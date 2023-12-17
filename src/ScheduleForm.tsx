@@ -299,6 +299,8 @@ const StyledDays = styled(Days)`
     width: 12em;
     padding: 1.2em;
 
+    background-color: white;
+
     border-radius: 2px;
 
     cursor: pointer;
@@ -337,6 +339,8 @@ const StyledTimes = styled(Times)`
     box-sizing: content-box;
     width: 12em;
     padding: 1.2em;
+
+    background-color: white;
 
     border-radius: 2px;
 
