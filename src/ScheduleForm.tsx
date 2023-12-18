@@ -1,7 +1,11 @@
+import moment from "moment-timezone";
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 import { colors } from "./utilities";
+
+const tz = "America/Los_Angeles";
+const localStorageScheduledTime = "scheduledTime";
 
 const selectorFontSize = "1em";
 const inputFontSize = 1.05;
@@ -444,9 +448,130 @@ const StyledNotTakingAppointments = styled(NotTakingAppointments)`
 type ITimesObject = {
   Today: string[] | null;
   Tomorrow: string[] | null;
+  token: string;
 };
 
 type IDays = "Today" | "Tomorrow";
+
+const getAlreadyScheduled = () => {
+  const itemString = localStorage.getItem(localStorageScheduledTime);
+  if (itemString) {
+    const item = JSON.parse(itemString);
+    if (item) {
+      const scheduledTime = parseInt(item);
+      if (typeof scheduledTime === "number") {
+        const currentTime = moment(scheduledTime).tz(tz).format("h:mm A");
+        return currentTime;
+      }
+    }
+  }
+  return null;
+};
+
+const checkIfAlreadyScheduled = (): boolean => {
+  const itemString = localStorage.getItem(localStorageScheduledTime);
+  if (itemString) {
+    const item = JSON.parse(itemString);
+    if (item) {
+      const scheduledTime = parseInt(item);
+      if (typeof scheduledTime === "number") {
+        const currentTime = moment.tz(tz).valueOf();
+        console.log(currentTime, scheduledTime, currentTime - scheduledTime, "times");
+        if (currentTime < scheduledTime) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+const setLocalStorage = (day: IDays | null, time: string | null, token: string | null) => {
+  let time1 = moment(time, "h:mm A");
+  if (day === "Tomorrow") {
+    time1.add(1, "day");
+    localStorage.setItem("scheduledDay", "Tomorrow");
+  } else {
+    localStorage.setItem("scheduledDay", "Today");
+  }
+
+  localStorage.setItem(localStorageScheduledTime, time1.valueOf().toString());
+
+  if (token) {
+    localStorage.setItem("token", token);
+  }
+};
+
+const AlreadyScheduledView = ({
+  handleSubmit,
+  handleGoBack,
+  className,
+}: {
+  handleSubmit: () => void;
+  handleGoBack: () => void;
+  className?: string;
+}) => {
+  const token = localStorage.getItem("token");
+  return (
+    <div className={className}>
+      <h2>You already have a scheduled appt at: </h2>
+      <h2>
+        {getAlreadyScheduled()} {localStorage.getItem("scheduledDay")}
+      </h2>
+      <div className={"do-you-want"}>Do you want to cancel?</div>
+      <StyledConfirm
+        onClick={() => {
+          fetch(`${process.env.REACT_APP_URL}/deleteAppointment`, {
+            method: "post",
+            body: token,
+          }).finally(() => handleSubmit());
+        }}
+      >
+        Cancel This Appointment
+      </StyledConfirm>
+      <StyledConfirm className={"tertiary"} onClick={() => handleGoBack()}>
+        Keep This Appointment
+      </StyledConfirm>
+    </div>
+  );
+};
+
+const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
+  position: absolute;
+  height: 33em;
+  width: 20.8em;
+  background-color: rgba(255, 255, 255, 1);
+
+  /* border: 1px solid gray;
+  border-radius: 3px;
+  box-shadow: 1px 1px 2px gray; */
+
+  display: flex;
+  flex-direction: column;
+
+  .do-you-want {
+    font-size: 1.2em;
+    padding: 0.5em;
+    margin: 0.3em;
+    align-self: center;
+  }
+
+  a {
+    align-self: center;
+    margin-top: 1em;
+    font-size: 1.2em;
+    color: rgba(100, 100, 100, 1);
+  }
+
+  a:hover {
+    cursor: pointer;
+  }
+
+  .tertiary {
+    background-color: rgb(166, 166, 166);
+  }
+`;
 
 export function ScheduleForm({
   showForm,
@@ -463,38 +588,47 @@ export function ScheduleForm({
   const [phone, setPhone] = useState("");
   const [times, setTimes] = useState<ITimesObject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
+  const [isAlreadyScheduled, setIsAlreadyScheduled] = useState(false);
 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
   useEffect(() => {
-    setIsLoading(true);
+    if (!isLoading) return;
     (async () => {
       try {
         const result = await fetch(`${process.env.REACT_APP_URL}/clientObject`);
         const timesObject = (await result.json()) as ITimesObject;
         const days = Object.keys(timesObject);
+        const todayIdx = days.indexOf("Today");
+        const tomorrowIdx = days.indexOf("Tomorrow");
         if (timesObject.Today !== null) {
           if (timesObject.Today.length === 0) {
-            setDay(days[1] as IDays);
+            setDay(days[tomorrowIdx] as IDays);
           } else {
-            setDay(days[0] as IDays);
+            setDay(days[todayIdx] as IDays);
           }
         } else {
           if (timesObject.Tomorrow !== null) {
-            setDay(days[1] as IDays);
+            setDay(days[tomorrowIdx] as IDays);
           } else {
-            setDay(days[0] as IDays);
+            setDay(days[todayIdx] as IDays);
           }
         }
 
-        setDays(days as IDays[]);
+        setDays([days[todayIdx], days[tomorrowIdx]] as IDays[]);
         setTimes(timesObject);
+        if (timesObject.token) {
+          setToken(timesObject.token);
+        } else {
+          setToken("");
+        }
       } catch (e) {
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [showForm]);
+  }, [showForm, isLoading]);
 
   useEffect(() => {
     if (!times || !day || !days) return;
@@ -505,8 +639,25 @@ export function ScheduleForm({
     }
   }, [times, day, days]);
 
+  useEffect(() => {
+    setIsAlreadyScheduled(checkIfAlreadyScheduled());
+  }, []);
+
   return (
     <Column>
+      {isAlreadyScheduled && (
+        <StyledAlreadyScheduledView
+          handleSubmit={() => {
+            localStorage.clear();
+            setIsAlreadyScheduled(false);
+            setShowForm(true);
+            setIsLoading(true);
+          }}
+          handleGoBack={() => {
+            setShowForm(false);
+          }}
+        />
+      )}
       <FormWrapper>
         {isLoading && <>{isLoading}</>}
         {!isLoading && (
@@ -523,8 +674,11 @@ export function ScheduleForm({
               onClick={async () => {
                 await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
                   method: "post",
-                  body: JSON.stringify({ day, time, barber, name, phone }),
-                }).finally(() => setShowForm(false));
+                  body: JSON.stringify({ day, time, barber, name, phone, token }),
+                }).finally(() => {
+                  setLocalStorage(day, time, token);
+                  setShowForm(false);
+                });
               }}
             >
               Confirm

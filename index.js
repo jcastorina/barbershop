@@ -1,8 +1,8 @@
 const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
-const { networkInterfaces } = require("os");
 const path = require("path");
+const uuid = require("uuid").v4;
 // const https = require("https");
 // const fs = require("fs");
 
@@ -63,8 +63,8 @@ const makeHours = (start, hours) => {
 };
 
 const defaultSched = Object.freeze({
-  0: null,
-  1: null,
+  0: [8, 19],
+  1: [9, 15],
   2: [8, 18],
   3: [8, 18],
   4: [8, 18],
@@ -87,6 +87,14 @@ const schedule = {
     appts: [
       // { name: "joe", phone: 1234567890, time: "10:30 AM", barber: "mitch" },
       // { name: "joey", phone: 1234657890, time: "9:30 AM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "9:00 AM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "10:00 AM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "2:30 PM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "12:00 PM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "12:30 PM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "1:00 PM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "2:00 PM", barber: "mitch" },
+      // { name: "joey", phone: 1234657890, time: "3:00 PM", barber: "mitch" },
       // { name: "jooe", phone: 2234657890, time: "3:30 PM", barber: "mitch" },
       // { name: "jsadgooe", phone: 2234659990, time: "1:30 PM", barber: "mitch" },
     ],
@@ -110,12 +118,26 @@ const filterArray = (array1, array2) => {
   return res;
 };
 
-const removeTime = (times, time) => {
+const removeTime = (times = [], time) => {
   const idx = times.indexOf(time);
-  if (!idx) {
-    return null;
+  if (idx >= 0) {
+    if (times.length === 1) {
+      return [];
+    } else if (times.length === 2) {
+      if (idx === 0) {
+        return [times[1]];
+      } else {
+        return [times[0]];
+      }
+    } else if (idx === times.length - 1) {
+      return [...times.slice(0, times.length - 1)];
+    } else if (idx === 0) {
+      return [...times.slice(1, times.length)];
+    } else {
+      return [...times.slice(0, idx), ...times.slice(idx + 1, times.length)];
+    }
   }
-  return [...times.slice(0, idx), ...times.slice(idx + 1, times.length)];
+  return [...times];
 };
 
 const getAvailableTimes = (schedule) => {
@@ -207,8 +229,9 @@ const checkDayElapsed = (tz) => {
 app.get("/clientObject", (req, res) => {
   checkDayElapsed(tz);
   const timesObject = getAvailableTimes(schedule);
+  const token = uuid();
 
-  res.write(JSON.stringify(timesObject));
+  res.write(JSON.stringify({ ...timesObject, token }));
   return res.end();
 });
 
@@ -260,14 +283,15 @@ app.post("/adminUpdateSchedule", (req, res) => {
 app.post("/newAppointment", (req, res) => {
   const result = JSON.parse(req.body);
 
-  const { day, time, barber, name, phone } = result;
+  const { day, time, barber, name, phone, token } = result;
 
   if (
     typeof day !== "string" ||
     typeof time !== "string" ||
     typeof barber !== "string" ||
     typeof name !== "string" ||
-    typeof phone !== "string"
+    typeof phone !== "string" ||
+    typeof token !== "string"
   ) {
     return res.status(400);
   }
@@ -278,9 +302,22 @@ app.post("/newAppointment", (req, res) => {
     barber,
     name,
     phone,
+    token,
   };
 
   schedule[day].appts.push(appointmentRecord);
+
+  console.log(schedule.Tomorrow.appts, "new record");
+
+  res.status(200);
+  return res.end();
+});
+
+app.post("/deleteAppointment", (req, res) => {
+  const token = req.body;
+
+  schedule.Today.appts = schedule.Today.appts.filter((appt) => appt.token !== token);
+  schedule.Tomorrow.appts = schedule.Tomorrow.appts.filter((appt) => appt.token !== token);
 
   res.status(200);
   return res.end();
