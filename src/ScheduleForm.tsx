@@ -503,6 +503,24 @@ const setLocalStorage = (day: IDays | null, time: string | null, token: string |
   }
 };
 
+const Dialog = ({
+  children,
+  className,
+}: {
+  children: JSX.Element | JSX.Element[];
+  className?: string;
+}) => <div className={className}>{children}</div>;
+
+const StyledDialog = styled(Dialog)`
+  position: absolute;
+  height: 33em;
+  width: 20.8em;
+  background-color: rgba(255, 255, 255, 1);
+
+  display: flex;
+  flex-direction: column;
+`;
+
 const AlreadyScheduledView = ({
   handleSubmit,
   handleGoBack,
@@ -538,18 +556,6 @@ const AlreadyScheduledView = ({
 };
 
 const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
-  position: absolute;
-  height: 33em;
-  width: 20.8em;
-  background-color: rgba(255, 255, 255, 1);
-
-  /* border: 1px solid gray;
-  border-radius: 3px;
-  box-shadow: 1px 1px 2px gray; */
-
-  display: flex;
-  flex-direction: column;
-
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
@@ -573,13 +579,65 @@ const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
   }
 `;
 
-export function ScheduleForm({
-  showForm,
-  setShowForm,
+const SuccessfulAppointmentView = ({
+  onDone,
+  className,
 }: {
-  showForm: boolean;
-  setShowForm: (show: boolean) => void;
-}) {
+  onDone: () => void;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <h2>You are all set to go!</h2>
+      <div className={"do-you-want"}>See you at</div>
+      <h2 className={"time"}>
+        {getAlreadyScheduled()} {localStorage.getItem("scheduledDay")}
+      </h2>
+      <div className={"button-layout"}>
+        <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
+          Close
+        </StyledConfirm>
+      </div>
+    </div>
+  );
+};
+
+const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
+  .do-you-want {
+    font-size: 1.2em;
+    padding: 0.5em;
+    margin: 0.3em;
+    align-self: center;
+  }
+
+  .time {
+    color: ${colors.coolBlue};
+  }
+
+  a {
+    align-self: center;
+    margin-top: 1em;
+    font-size: 1.2em;
+    color: rgba(100, 100, 100, 1);
+  }
+
+  a:hover {
+    cursor: pointer;
+  }
+
+  .button-layout {
+    padding-top: 6em;
+  }
+
+  .tertiary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(166, 166, 166);
+  }
+`;
+
+export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => void }) {
   const [barber] = useState("Mitch");
   const [day, setDay] = useState<IDays | null>(null);
   const [days, setDays] = useState<IDays[] | null>(null);
@@ -590,6 +648,7 @@ export function ScheduleForm({
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const [isAlreadyScheduled, setIsAlreadyScheduled] = useState(false);
+  const [isSuccessfullAppointment, setIsSuccessfulAppointment] = useState(false);
 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
@@ -628,7 +687,7 @@ export function ScheduleForm({
         setIsLoading(false);
       }
     })();
-  }, [showForm, isLoading]);
+  }, [isLoading]);
 
   useEffect(() => {
     if (!times || !day || !days) return;
@@ -642,21 +701,32 @@ export function ScheduleForm({
   useEffect(() => {
     setIsAlreadyScheduled(checkIfAlreadyScheduled());
   }, []);
-
+  console.log(isSuccessfullAppointment, "is succ");
   return (
     <Column>
+      {isSuccessfullAppointment && (
+        <StyledDialog>
+          <StyledSuccessfulAppointmentView
+            onDone={() => {
+              setShowForm(false);
+            }}
+          />
+        </StyledDialog>
+      )}
       {isAlreadyScheduled && (
-        <StyledAlreadyScheduledView
-          handleSubmit={() => {
-            localStorage.clear();
-            setIsAlreadyScheduled(false);
-            setShowForm(true);
-            setIsLoading(true);
-          }}
-          handleGoBack={() => {
-            setShowForm(false);
-          }}
-        />
+        <StyledDialog>
+          <StyledAlreadyScheduledView
+            handleSubmit={() => {
+              localStorage.clear();
+              setIsAlreadyScheduled(false);
+              setShowForm(true);
+              setIsLoading(true);
+            }}
+            handleGoBack={() => {
+              setShowForm(false);
+            }}
+          />
+        </StyledDialog>
       )}
       <FormWrapper>
         {isLoading && <>{isLoading}</>}
@@ -677,7 +747,7 @@ export function ScheduleForm({
                   body: JSON.stringify({ day, time, barber, name, phone, token }),
                 }).finally(() => {
                   setLocalStorage(day, time, token);
-                  setShowForm(false);
+                  setIsSuccessfulAppointment(true);
                 });
               }}
             >

@@ -63,8 +63,8 @@ const makeHours = (start, hours) => {
 };
 
 const defaultSched = Object.freeze({
-  0: [8, 19],
-  1: [9, 15],
+  0: null,
+  1: null,
   2: [8, 18],
   3: [8, 18],
   4: [8, 18],

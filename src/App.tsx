@@ -161,7 +161,7 @@ function App() {
               <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
             </ButtonContainer>
           )}
-          {showForm && <ScheduleForm showForm={showForm} setShowForm={setShowForm} />}
+          {showForm && <ScheduleForm setShowForm={setShowForm} />}
         </Content>
       </ResponsiveWrapper>
       <Footer>Proudly serving since 2013</Footer>

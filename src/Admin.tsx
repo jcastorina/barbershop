@@ -355,6 +355,8 @@ const AppointmentView = ({
   const canBack = appts?.length && index > 0 ? true : false;
   const canForward = appts?.length && index < appts.length - 1 ? true : false;
 
+  const hasToken = () => Boolean(appts && appts[index] && appts[index].token);
+
   return (
     <div className={className}>
       <h2>{day}'s&nbsp;Appointments</h2>
@@ -367,14 +369,30 @@ const AppointmentView = ({
       {appts && appts.length === 0 && (
         <div className={"no-appointments"}>No appointments to show!</div>
       )}
-      <button
-        className={"close-button"}
-        onClick={() => {
-          setShow(false);
-        }}
-      >
-        Close
-      </button>
+      <div className={"button-column"}>
+        <button
+          disabled={!hasToken()}
+          className={"close-button"}
+          onClick={() => {
+            if (hasToken()) {
+              fetch(`${process.env.REACT_APP_URL}/deleteAppointment`, {
+                method: "post",
+                body: appts![index].token,
+              }).finally(() => setShow(false));
+            }
+          }}
+        >
+          Delete
+        </button>
+        <button
+          className={"close-button"}
+          onClick={() => {
+            setShow(false);
+          }}
+        >
+          Close
+        </button>
+      </div>
     </div>
   );
 };
@@ -399,9 +417,13 @@ const StyledAppointmentView = styled(AppointmentView)`
     margin-top: 3em;
   }
 
-  .close-button {
-    margin-left: 8em;
+  .button-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
+  .close-button {
     width: 5.5em;
     height: 2.5em;
   }
@@ -415,6 +437,7 @@ type IAppointmentRecord = {
   barber: string;
   day: string;
   phone: string;
+  token: string;
 };
 
 type IDaySchedule = {
