@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import { colors } from "./utilities";
 
-const tz = "America/Los_Angeles";
+const tz = "America/Chicago";
 const localStorageScheduledTime = "scheduledTime";
 
 const selectorFontSize = "1em";
