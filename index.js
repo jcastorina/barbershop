@@ -1,3 +1,4 @@
+require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
 const moment = require("moment-timezone");
@@ -18,7 +19,7 @@ app.use(cors({ optionsSuccessStatus: 200, origin: "*" }));
 app.use(express.text());
 
 const PORT = 3001;
-const tz = "America/Los_Angeles";
+const tz = process.env.TZ || "America/Chicago";
 
 // THIS ONLY GETS USED LOCALLY NOW
 // DEPLOYED EXPRESS USES https
@@ -63,19 +64,21 @@ const makeHours = (start, hours) => {
 };
 
 const defaultSched = Object.freeze({
-  0: null,
-  1: null,
-  2: [8, 18],
-  3: [8, 18],
-  4: [8, 18],
-  5: [8, 18],
-  6: [8, 14],
+  0: [8, 11],
+  1: [8, 12],
+  2: [8, 13],
+  3: [8, 14],
+  4: [8, 15],
+  5: [8, 16],
+  6: [8, 17],
 });
 
 const defaultHours = makeHours(8, 18);
 
-const date = moment().tz(tz);
+const date = moment().tz(tz).add(16, "hours").subtract(3, "minutes");
 const day = date.day();
+
+console.log(date, day);
 
 const schedule = {
   Today: {
@@ -190,18 +193,18 @@ const getAvailableTimes = (schedule) => {
   return { Today, Tomorrow };
 };
 
-let lastRequestTimestamp = moment.tz(tz).format();
-
+let lastRequestTimestamp = moment.tz(tz);
 // let m = moment.tz(tz).add(1, "days");
 
 const checkDayElapsed = (tz) => {
   const lastRequestTime = moment(lastRequestTimestamp);
 
-  const currentTime = moment().tz(tz);
+  const currentTime = moment.tz(tz); //.add(16, "hours");
 
   const daysElapsed = currentTime.diff(lastRequestTime, "days");
 
   lastRequestTimestamp = currentTime.format();
+
   if (daysElapsed >= 1) {
     if (daysElapsed === 1) {
       schedule.Today = { ...schedule.Tomorrow };
@@ -218,7 +221,6 @@ const checkDayElapsed = (tz) => {
         : null;
       schedule.Today = { hours: newDayToday, appts: [] };
       schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
-      console.log(daysElapsed, schedule, "2 days");
     }
     return daysElapsed;
   } else {

@@ -341,12 +341,17 @@ const AppointmentView = ({
   className?: string;
 }) => {
   const [appts, setAppts] = useState<IAppointmentRecord[] | [] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (day === "Today") {
-      getTodayAppts().then((appts) => setAppts(appts));
+      getTodayAppts()
+        .then((appts) => setAppts(appts))
+        .finally(() => setIsLoading(false));
     } else if (day === "Tomorrow") {
-      getTomorrowAppts().then((appts) => setAppts(appts));
+      getTomorrowAppts()
+        .then((appts) => setAppts(appts))
+        .finally(() => setIsLoading(false));
     }
   }, [day]);
 
@@ -356,7 +361,10 @@ const AppointmentView = ({
   const canForward = appts?.length && index < appts.length - 1 ? true : false;
 
   const hasToken = () => Boolean(appts && appts[index] && appts[index].token);
-
+  console.log(appts);
+  if (isLoading) {
+    return <span>loading</span>;
+  }
   return (
     <div className={className}>
       <h2>{day}'s&nbsp;Appointments</h2>
