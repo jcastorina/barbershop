@@ -75,10 +75,8 @@ const defaultSched = Object.freeze({
 
 const defaultHours = makeHours(8, 18);
 
-const date = moment().tz(tz).add(16, "hours").subtract(3, "minutes");
+const date = moment().tz(tz);
 const day = date.day();
-
-console.log(date, day);
 
 const schedule = {
   Today: {
@@ -194,39 +192,48 @@ const getAvailableTimes = (schedule) => {
 };
 
 let lastRequestTimestamp = moment.tz(tz);
-// let m = moment.tz(tz).add(1, "days");
+
+let _day = 0;
+
+const addDay = (days) => {
+  _day = days;
+};
 
 const checkDayElapsed = (tz) => {
-  const lastRequestTime = moment(lastRequestTimestamp);
+  const currentTime = moment.tz(tz).add(_day, "days");
+  const currentDay = currentTime.day();
+  const daysElapsed = currentTime.diff(lastRequestTimestamp, "days");
 
-  const currentTime = moment.tz(tz); //.add(16, "hours");
+  const todayHours = [...defaultSched[currentDay]];
+  const tomorrowHours = [...defaultSched[(currentDay + 1) % 7]];
 
-  const daysElapsed = currentTime.diff(lastRequestTime, "days");
+  console.log(currentDay, daysElapsed, currentTime, lastRequestTimestamp, "days elapsed");
 
-  lastRequestTimestamp = currentTime.format();
+  if (daysElapsed === 1) {
+    const appts = [...schedule.Tomorrow.appts].map((appt) => ({ ...appt, day: "Today" }));
+    schedule.Tomorrow.appts = appts;
+    schedule.Today = { ...schedule.Tomorrow };
+    schedule.Tomorrow.appts = [];
+    schedule.Tomorrow.hours = tomorrowHours;
 
-  if (daysElapsed >= 1) {
-    if (daysElapsed === 1) {
-      schedule.Today = { ...schedule.Tomorrow };
-      const newDayTomorrow = defaultSched[(currentTime.day() + 1) % 7]
-        ? [...defaultSched[(currentTime.day() + 1) % 7]]
-        : null;
-      schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
-    } else {
-      const newDayToday = defaultSched[currentTime.day()]
-        ? [...defaultSched[currentTime.day()]]
-        : null;
-      const newDayTomorrow = defaultSched[(currentTime.day() + 1) % 7]
-        ? [...defaultSched[(currentTime.day() + 1) % 7]]
-        : null;
-      schedule.Today = { hours: newDayToday, appts: [] };
-      schedule.Tomorrow = { hours: newDayTomorrow, appts: [] };
-    }
-    return daysElapsed;
-  } else {
-    return 0;
+    console.log(schedule);
+  }
+
+  if (daysElapsed > 1) {
+    schedule.Today.appts = [];
+    schedule.Today.hours = todayHours;
+    schedule.Tomorrow.appts = [];
+    schedule.Tomorrow.hours = tomorrowHours;
+
+    console.log(schedule);
   }
 };
+
+app.get("/addDay/:id", (req, res) => {
+  addDay(parseInt(req.params.id));
+  res.status(200);
+  return res.end();
+});
 
 app.get("/clientObject", (req, res) => {
   checkDayElapsed(tz);
@@ -308,8 +315,6 @@ app.post("/newAppointment", (req, res) => {
   };
 
   schedule[day].appts.push(appointmentRecord);
-
-  console.log(schedule.Tomorrow.appts, "new record");
 
   res.status(200);
   return res.end();

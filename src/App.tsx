@@ -159,6 +159,13 @@ function App() {
                 GET DIRECTIONS
               </Anchor>
               <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
+              {/* <Anchor
+                onClick={() => {
+                  fetch(`${process.env.REACT_APP_URL}/addDay/0`);
+                }}
+              >
+                Add Day
+              </Anchor> */}
             </ButtonContainer>
           )}
           {showForm && <ScheduleForm setShowForm={setShowForm} />}
