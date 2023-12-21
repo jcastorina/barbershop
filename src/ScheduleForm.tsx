@@ -13,6 +13,7 @@ const inputFontSize = 1.05;
 const Column = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
 `;
 
 const FormWrapper = styled.div`
@@ -476,7 +477,6 @@ const checkIfAlreadyScheduled = (): boolean => {
       const scheduledTime = parseInt(item);
       if (typeof scheduledTime === "number") {
         const currentTime = moment.tz(tz).valueOf();
-        console.log(currentTime, scheduledTime, currentTime - scheduledTime, "times");
         if (currentTime < scheduledTime) {
           return true;
         }
@@ -513,8 +513,10 @@ const Dialog = ({
 
 const StyledDialog = styled(Dialog)`
   position: absolute;
-  height: 33em;
-  width: 20.8em;
+  height: 29em;
+
+  padding: 1em 2em 2em 2em;
+  width: 22em;
   background-color: rgba(255, 255, 255, 1);
 
   display: flex;
@@ -549,13 +551,22 @@ const AlreadyScheduledView = ({
         Cancel This Appointment
       </StyledConfirm>
       <StyledConfirm className={"tertiary"} onClick={() => handleGoBack()}>
-        Keep This Appointment
+        <span>Keep This Appointment</span>
+        <span>and book another one</span>
       </StyledConfirm>
     </div>
   );
 };
 
 const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
+  // background-color: yellow;
+  h2 {
+    // background-color: blue;
+  }
+  ${StyledConfirm} {
+    height: 6em;
+  }
+
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
@@ -575,6 +586,10 @@ const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
   }
 
   .tertiary {
+    background-color: rgb(122, 122, 122);
+  }
+
+  .tertiary:hover {
     background-color: rgb(166, 166, 166);
   }
 `;
@@ -588,10 +603,10 @@ const SuccessfulAppointmentView = ({
 }) => {
   return (
     <div className={className}>
-      <h2>You are all set to go!</h2>
+      <h2>You are all set to go! 🎉</h2>
       <div className={"do-you-want"}>See you at</div>
       <h2 className={"time"}>
-        {getAlreadyScheduled()} {localStorage.getItem("scheduledDay")}
+        ⭐ {getAlreadyScheduled()} {localStorage.getItem("scheduledDay")}
       </h2>
       <div className={"button-layout"}>
         <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
@@ -603,15 +618,23 @@ const SuccessfulAppointmentView = ({
 };
 
 const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
+  display: flex;
+  flex-direction: column;
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
     margin: 0.3em;
-    align-self: center;
+    align-self: flex-start;
   }
 
   .time {
     color: ${colors.coolBlue};
+    align-self: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    padding-top: 2em;
   }
 
   a {
@@ -626,13 +649,17 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   }
 
   .button-layout {
-    padding-top: 6em;
+    padding-top: 5.5em;
   }
 
   .tertiary {
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: rgb(122, 122, 122);
+  }
+
+  .tertiary:hover {
     background-color: rgb(166, 166, 166);
   }
 `;
@@ -701,7 +728,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
   useEffect(() => {
     setIsAlreadyScheduled(checkIfAlreadyScheduled());
   }, []);
-  console.log(isSuccessfullAppointment, "is succ");
+
   return (
     <Column>
       {isSuccessfullAppointment && (
@@ -723,7 +750,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
               setIsLoading(true);
             }}
             handleGoBack={() => {
-              setShowForm(false);
+              setIsAlreadyScheduled(false);
             }}
           />
         </StyledDialog>

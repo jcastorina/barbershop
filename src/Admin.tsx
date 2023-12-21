@@ -361,7 +361,7 @@ const AppointmentView = ({
   const canForward = appts?.length && index < appts.length - 1 ? true : false;
 
   const hasToken = () => Boolean(appts && appts[index] && appts[index].token);
-  console.log(appts);
+
   if (isLoading) {
     return <span>loading</span>;
   }

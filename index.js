@@ -207,16 +207,12 @@ const checkDayElapsed = (tz) => {
   const todayHours = [...defaultSched[currentDay]];
   const tomorrowHours = [...defaultSched[(currentDay + 1) % 7]];
 
-  console.log(currentDay, daysElapsed, currentTime, lastRequestTimestamp, "days elapsed");
-
   if (daysElapsed === 1) {
     const appts = [...schedule.Tomorrow.appts].map((appt) => ({ ...appt, day: "Today" }));
     schedule.Tomorrow.appts = appts;
     schedule.Today = { ...schedule.Tomorrow };
     schedule.Tomorrow.appts = [];
     schedule.Tomorrow.hours = tomorrowHours;
-
-    console.log(schedule);
   }
 
   if (daysElapsed > 1) {
@@ -224,8 +220,6 @@ const checkDayElapsed = (tz) => {
     schedule.Today.hours = todayHours;
     schedule.Tomorrow.appts = [];
     schedule.Tomorrow.hours = tomorrowHours;
-
-    console.log(schedule);
   }
 };
 
