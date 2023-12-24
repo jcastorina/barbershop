@@ -21,6 +21,10 @@ app.use(express.text());
 const PORT = 3001;
 const tz = process.env.TZ || "America/Chicago";
 
+const getWithOffset = (tz) => {
+  return moment().tz(tz);
+};
+
 // THIS ONLY GETS USED LOCALLY NOW
 // DEPLOYED EXPRESS USES https
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
@@ -30,7 +34,7 @@ app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 // });
 
 const filterTimesAfterCurrent = (timesArray, tz) => {
-  const currentTime = moment().tz(tz);
+  const currentTime = getWithOffset(tz); //moment().tz(tz);
 
   return timesArray.filter((timeString) => {
     const timeMoment = moment.tz(
@@ -75,7 +79,7 @@ const defaultSched = Object.freeze({
 
 const defaultHours = makeHours(8, 18);
 
-const date = moment().tz(tz);
+const date = getWithOffset(tz); // moment().tz(tz);
 const day = date.day();
 
 const schedule = {
@@ -191,28 +195,28 @@ const getAvailableTimes = (schedule) => {
   return { Today, Tomorrow };
 };
 
-let lastRequestTimestamp = moment.tz(tz);
-
-let _day = 0;
-
-const addDay = (days) => {
-  _day = days;
-};
+let lastRequestTimestamp = getWithOffset(tz);
 
 const checkDayElapsed = (tz) => {
-  const currentTime = moment.tz(tz).add(_day, "days");
+  const currentTime = getWithOffset(tz);
   const currentDay = currentTime.day();
-  const daysElapsed = currentTime.diff(lastRequestTimestamp, "days");
+  const daysElapsed = currentTime
+    .clone()
+    .startOf("day")
+    .diff(lastRequestTimestamp.clone().startOf("day"), "days");
+  const todayHours = defaultSched[currentDay] ? [...defaultSched[currentDay]] : null;
+  const tomorrowHours = defaultSched[(currentDay + 1) % 7]
+    ? [...defaultSched[(currentDay + 1) % 7]]
+    : null;
 
-  const todayHours = [...defaultSched[currentDay]];
-  const tomorrowHours = [...defaultSched[(currentDay + 1) % 7]];
-
+  lastRequestTimestamp = currentTime;
   if (daysElapsed === 1) {
     const appts = [...schedule.Tomorrow.appts].map((appt) => ({ ...appt, day: "Today" }));
     schedule.Tomorrow.appts = appts;
     schedule.Today = { ...schedule.Tomorrow };
     schedule.Tomorrow.appts = [];
     schedule.Tomorrow.hours = tomorrowHours;
+    return;
   }
 
   if (daysElapsed > 1) {
@@ -220,6 +224,7 @@ const checkDayElapsed = (tz) => {
     schedule.Today.hours = todayHours;
     schedule.Tomorrow.appts = [];
     schedule.Tomorrow.hours = tomorrowHours;
+    return;
   }
 };
 
@@ -297,6 +302,15 @@ app.post("/newAppointment", (req, res) => {
     typeof token !== "string"
   ) {
     return res.status(400);
+  }
+
+  const existingAppts = schedule[day].appts;
+
+  const hasExisting = existingAppts.filter((appt) => appt.time === time).length;
+
+  if (hasExisting) {
+    res.status(409);
+    return res.end();
   }
 
   const appointmentRecord = {

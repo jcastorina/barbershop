@@ -190,7 +190,7 @@ const StyledPrices = styled(Prices)`
     background: none;
     border: none;
 
-    margin-top: 1.8em;
+    margin-top: 1.2em;
 
     font-size: 1em;
   }
@@ -229,10 +229,11 @@ const StyledPrices = styled(Prices)`
   .note-items {
     display: flex;
     flex-direction: column;
-    font-size: 0.8em;
-    padding-left: 6.5em;
-    padding-top: 0.3em;
+    font-size: 0.9em;
+    padding-left: 5em;
+    padding-top: 0.7em;
     align-self: flex-start;
+    color: rgba(44, 44, 44, 1);
   }
 
   .cash-or-check {

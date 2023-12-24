@@ -664,6 +664,82 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   }
 `;
 
+const ConflictView = ({
+  day,
+  time,
+  onDone,
+  className,
+}: {
+  day: IDays | null;
+  time: string | null;
+  onDone: () => void;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <h2>Uh oh</h2>
+      <div className={"do-you-want"}>Looks like someone JUST scheduled that time!!</div>
+      <h2 className={"time"}>
+        {time} {day}
+      </h2>
+      <div className={"button-layout"}>
+        <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
+          Find Another Time
+        </StyledConfirm>
+      </div>
+    </div>
+  );
+};
+
+const StyledConflictView = styled(ConflictView)`
+  display: flex;
+  flex-direction: column;
+  .do-you-want {
+    font-size: 1.2em;
+    padding: 0.5em;
+    margin: 0.3em;
+    align-self: flex-start;
+  }
+
+  .time {
+    color: ${colors.hotRed};
+    align-self: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    text-decoration: line-through;
+
+    padding-top: 2em;
+  }
+
+  a {
+    align-self: center;
+    margin-top: 1em;
+    font-size: 1.2em;
+    color: rgba(100, 100, 100, 1);
+  }
+
+  a:hover {
+    cursor: pointer;
+  }
+
+  .button-layout {
+    padding-top: 5.5em;
+  }
+
+  .tertiary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: ${colors.coolBlue};
+  }
+
+  .tertiary:hover {
+    background-color: ${colors.chairBlue};
+  }
+`;
+
 export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => void }) {
   const [barber] = useState("Mitch");
   const [day, setDay] = useState<IDays | null>(null);
@@ -676,6 +752,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
   const [token, setToken] = useState<string | null>(null);
   const [isAlreadyScheduled, setIsAlreadyScheduled] = useState(false);
   const [isSuccessfullAppointment, setIsSuccessfulAppointment] = useState(false);
+  const [hasConflict, setHasConflict] = useState(false);
 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
@@ -740,6 +817,18 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
           />
         </StyledDialog>
       )}
+      {hasConflict && (
+        <StyledDialog>
+          <StyledConflictView
+            day={day}
+            time={time}
+            onDone={() => {
+              setIsLoading(true);
+              setHasConflict(false);
+            }}
+          />
+        </StyledDialog>
+      )}
       {isAlreadyScheduled && (
         <StyledDialog>
           <StyledAlreadyScheduledView
@@ -772,10 +861,22 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
                 await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
                   method: "post",
                   body: JSON.stringify({ day, time, barber, name, phone, token }),
-                }).finally(() => {
-                  setLocalStorage(day, time, token);
-                  setIsSuccessfulAppointment(true);
-                });
+                })
+                  .then((e) => {
+                    const status = e.status;
+                    if (status === 409) {
+                      setHasConflict(true);
+                    } else if (e.ok) {
+                      setLocalStorage(day, time, token);
+                      setIsSuccessfulAppointment(true);
+                    } else {
+                      throw new Error("unhandled network exception");
+                    }
+                  })
+                  .catch((e) => {
+                    console.log(e, "network error");
+                    return;
+                  });
               }}
             >
               Confirm
