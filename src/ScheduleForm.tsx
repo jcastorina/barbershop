@@ -520,14 +520,24 @@ const Dialog = ({
 
 const StyledDialog = styled(Dialog)`
   position: absolute;
-  height: 29em;
-
-  padding: 1em 2em 2em 2em;
-  width: 22em;
-  background-color: rgba(255, 255, 255, 1);
-
   display: flex;
   flex-direction: column;
+  //padding: 3em 0em;
+  /* min-width: 23em;
+  max-width: 33em; */
+  width: 25em;
+  height: 35em;
+
+  align-items: center;
+  background-color: white;
+  border-radius: 6px;
+  box-sizing: content-box;
+  //height: 39em;
+  overflow: hidden;
+
+  background-color: rgba(255, 255, 255, 1);
+
+  border-radius: 6px;
 `;
 
 const AlreadyScheduledView = ({
@@ -567,6 +577,11 @@ const AlreadyScheduledView = ({
 
 const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
   // background-color: yellow;
+  padding: 0em 2em;
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+
   h2 {
     // background-color: blue;
   }
@@ -610,8 +625,11 @@ const SuccessfulAppointmentView = ({
 }) => {
   return (
     <div className={className}>
-      <h2>You are all set to go! 🎉</h2>
-      <div className={"do-you-want"}>See you at</div>
+      <div>
+        <h2>You are all set to go! 🎉</h2>
+        <div className={"do-you-want"}>See you at</div>
+      </div>
+
       <h2 className={"time"}>
         ⭐ {getAlreadyScheduled()} {localStorage.getItem("scheduledDay")}
       </h2>
@@ -627,6 +645,11 @@ const SuccessfulAppointmentView = ({
 const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   display: flex;
   flex-direction: column;
+  justify-content: space-evenly;
+  /* background-color: green; */
+  height: 100%;
+  //width: 100%;
+  padding: 0em 4em;
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
@@ -641,7 +664,7 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
     flex-direction: row;
     justify-content: center;
 
-    padding-top: 2em;
+    // padding-top: 2em;
   }
 
   a {
@@ -656,7 +679,7 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   }
 
   .button-layout {
-    padding-top: 5.5em;
+    // padding-top: 5.5em;
   }
 
   .tertiary {

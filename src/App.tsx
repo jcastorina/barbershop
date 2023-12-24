@@ -34,12 +34,12 @@ const ResponsiveWrapper = styled.div`
 const Content = styled.div`
   display: flex;
   flex-direction: column;
-  padding-top: 3em;
-  width: 30em;
+  padding: 3em 0em;
+  width: 25em;
   align-items: center;
   background-color: white;
   border-radius: 6px;
-
+  box-sizing: content-box;
   height: 33em;
 `;
 
@@ -105,10 +105,10 @@ const ButtonContainer = styled.div`
   align-items: center;
   width: 100%;
 
-  padding-top: 2em;
+  padding-top: 3em;
 
   a {
-    width: 16em;
+    width: 14em;
   }
 
   hr {
@@ -167,8 +167,9 @@ const Prices = ({ handleClick, className }: { handleClick: () => void; className
           </li>
         </ul>
       </div>
-
-      <button onClick={() => handleClick()}>Close</button>
+      <div className={"button-wrapper"}>
+        <button onClick={() => handleClick()}>Close</button>
+      </div>
     </div>
   );
 };
@@ -177,12 +178,16 @@ const StyledPrices = styled(Prices)`
   color: black;
 
   //width: 30em;
-  // width: 100%;
 
+  // width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 2em;
+
+  padding: 3em 4em 2em 4em;
+
+  // align-items: center;
+  //margin-top: 2em;
 
   // background-color: green;
 
@@ -190,7 +195,7 @@ const StyledPrices = styled(Prices)`
     background: none;
     border: none;
 
-    margin-top: 1.2em;
+    // margin-top: 1.2em;
 
     font-size: 1em;
   }
@@ -199,9 +204,15 @@ const StyledPrices = styled(Prices)`
     cursor: pointer;
   }
 
+  .button-wrapper {
+    padding-top: 3em;
+    display: grid;
+    place-items: center;
+  }
+
   .table {
     //  border: 1px solid pink;
-    padding-top: 3em;
+    // padding-top: 3em;
   }
 
   .table-row {
@@ -214,7 +225,7 @@ const StyledPrices = styled(Prices)`
   }
 
   .label {
-    width: 10em;
+    //  width: 10em;
     font-weight: bold;
     font-size: 1.3em;
     padding-bottom: 0.3em;
@@ -230,23 +241,24 @@ const StyledPrices = styled(Prices)`
     display: flex;
     flex-direction: column;
     font-size: 0.9em;
-    padding-left: 5em;
-    padding-top: 0.7em;
+    //  padding-left: 5em;
     align-self: flex-start;
+    // padding-top: 0.7em;
+
     color: rgba(44, 44, 44, 1);
   }
 
   .cash-or-check {
     font-style: italic;
     font-weight: bold;
-    margin-top: 1em;
-    margin-bottom: 0.3em;
+    //  margin-top: 1em;
+    // margin-bottom: 0.3em;
   }
 
   .walk-ins {
     font-style: italic;
     font-weight: bold;
-    margin-top: 0.2em;
+    //   margin-top: 0.2em;
   }
 `;
 
@@ -260,10 +272,17 @@ const Dialog = ({
 
 const StyledDialog = styled(Dialog)`
   position: absolute;
-  padding: 0em 1em;
-
-  width: 26em;
-  height: 32em;
+  display: flex;
+  flex-direction: column;
+  //padding: 3em 0em;
+  min-width: 23em;
+  max-width: 33em;
+  align-items: center;
+  background-color: white;
+  border-radius: 6px;
+  box-sizing: content-box;
+  height: 39em;
+  overflow: hidden;
 
   background-color: rgba(255, 255, 255, 1);
 
@@ -321,6 +340,7 @@ function App() {
           </StyledDialog>
         )}
         <Content>
+          {showForm && <ScheduleForm setShowForm={setShowForm} />}
           {!showForm && (
             <ButtonContainer>
               <Anchor
@@ -357,9 +377,9 @@ function App() {
               </Anchor> */}
             </ButtonContainer>
           )}
-          {showForm && <ScheduleForm setShowForm={setShowForm} />}
         </Content>
       </ResponsiveWrapper>
+
       <Footer>Proudly serving since 2013</Footer>
     </AppView>
   );
