@@ -476,8 +476,15 @@ const checkIfAlreadyScheduled = (): boolean => {
     if (item) {
       const scheduledTime = parseInt(item);
       if (typeof scheduledTime === "number") {
-        const currentTime = moment.tz(tz).valueOf();
-        if (currentTime < scheduledTime) {
+        const currentTime = moment.tz(tz);
+        if (currentTime.valueOf() < scheduledTime) {
+          const currentDay = currentTime.day();
+          const scheduledDay = moment.tz(scheduledTime, tz).day();
+          if (currentDay === scheduledDay) {
+            localStorage.setItem("scheduledDay", "Today");
+          } else {
+            localStorage.setItem("scheduledDay", "Tomorrow");
+          }
           return true;
         }
       }
