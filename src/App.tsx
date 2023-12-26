@@ -5,6 +5,8 @@ import { StyledAdminLoggedIn, StyledAdminLoginView } from "./Admin";
 import { ScheduleForm } from "./ScheduleForm";
 import { colors } from "./utilities";
 
+const mediaBreak = "830px";
+
 const AppView = styled.div`
   box-sizing: content-box;
 
@@ -17,37 +19,49 @@ const AppView = styled.div`
 
   display: flex;
   flex-direction: column;
-  align-items: center;
+  // justify-content: flex-start;
+  /* align-items: center; */
 `;
 
 const StyledLogo = styled.img`
   padding: 1em;
   align-self: flex-start;
-  @media (max-width: 500px) {
+  // background-color: green;
+  @media (max-height: ${mediaBreak}) {
     width: 6em;
     height: 6em;
   }
-  @media (min-width: 500px) {
+  @media (min-height: ${mediaBreak}) {
     width: 10em;
     height: 10em;
   }
 `;
 
 const Header = styled.div`
-  margin-bottom: 2em;
+  // margin-bottom: 2em;
   align-self: flex-start;
 `;
 
 const Content = styled.div`
+  align-self: center;
   display: flex;
   flex-direction: column;
-  padding: 3em 0em;
+
   width: 25em;
   align-items: center;
   background-color: white;
   border-radius: 6px;
   box-sizing: content-box;
   height: 30em;
+
+  padding: 3em 0em;
+
+  /* @media (max-height: ${mediaBreak}) {
+    padding: 0em 0em;
+  }
+  @media (min-height: ${mediaBreak}) {
+    padding: 3em 0em;
+  } */
 `;
 
 const Footer = styled.div`
@@ -56,7 +70,7 @@ const Footer = styled.div`
   color: white;
   bottom: 0px;
   width: 100%;
-  height: 4em;
+  height: 3em;
   display: grid;
   place-items: center;
 
