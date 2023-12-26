@@ -14,6 +14,7 @@ const Column = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 `;
 
 const FormWrapper = styled.div`
@@ -600,11 +601,9 @@ const SuccessfulAppointmentView = ({
         </h2>
       </div>
 
-      <div className={"button-layout"}>
-        <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
-          Close
-        </StyledConfirm>
-      </div>
+      <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
+        Close
+      </StyledConfirm>
     </div>
   );
 };
@@ -615,7 +614,7 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  padding: 0em 3em;
+  padding: 0em 1.9em 1em 1.9em;
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
