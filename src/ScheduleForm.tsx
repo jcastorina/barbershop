@@ -615,7 +615,7 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  padding: 0em 4em;
+  padding: 0em 3em;
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
@@ -855,7 +855,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
           }}
         />
       )}
-      {mode === "loading" && <>Loading...</>}
+      {mode === "loading" || (mode === "loadingAndNew" && <>Loading...</>)}
       {mode === "form" && (
         <FormWrapper>
           <StartColumn>
