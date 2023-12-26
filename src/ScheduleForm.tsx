@@ -13,13 +13,12 @@ const inputFontSize = 1.05;
 const Column = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  height: 100%;
 `;
 
 const FormWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  // padding-top: 1em;
 
   justify-content: center;
 `;
@@ -32,8 +31,6 @@ const StartColumn = styled.div<{ marginTop?: number }>`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
-  height: 40vh;
 
   justify-content: space-between;
 `;
@@ -510,36 +507,6 @@ const setLocalStorage = (day: IDays | null, time: string | null, token: string |
   }
 };
 
-const Dialog = ({
-  children,
-  className,
-}: {
-  children: JSX.Element | JSX.Element[];
-  className?: string;
-}) => <div className={className}>{children}</div>;
-
-const StyledDialog = styled(Dialog)`
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  //padding: 3em 0em;
-  /* min-width: 23em;
-  max-width: 33em; */
-  width: 25em;
-  height: 35em;
-
-  align-items: center;
-  background-color: white;
-  border-radius: 6px;
-  box-sizing: content-box;
-  //height: 39em;
-  overflow: hidden;
-
-  background-color: rgba(255, 255, 255, 1);
-
-  border-radius: 6px;
-`;
-
 const AlreadyScheduledView = ({
   handleSubmit,
   handleGoBack,
@@ -576,15 +543,10 @@ const AlreadyScheduledView = ({
 };
 
 const StyledAlreadyScheduledView = styled(AlreadyScheduledView)`
-  // background-color: yellow;
   padding: 0em 2em;
   display: flex;
   flex-direction: column;
-  /* justify-content: center; */
 
-  h2 {
-    // background-color: blue;
-  }
   ${StyledConfirm} {
     height: 6em;
   }
@@ -628,11 +590,16 @@ const SuccessfulAppointmentView = ({
       <div>
         <h2>You are all set to go! 🎉</h2>
         <div className={"do-you-want"}>See you at</div>
+        <h2 className={"time-row"}>
+          <span className={"time-icon"}>⭐</span>
+
+          <div className={"time"}>
+            <div className={"time-text"}>{getAlreadyScheduled()}</div>
+            <span className={"time-day"}>{localStorage.getItem("scheduledDay")}</span>
+          </div>
+        </h2>
       </div>
 
-      <h2 className={"time"}>
-        ⭐ {getAlreadyScheduled()} {localStorage.getItem("scheduledDay")}
-      </h2>
       <div className={"button-layout"}>
         <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
           Close
@@ -644,11 +611,10 @@ const SuccessfulAppointmentView = ({
 
 const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   display: flex;
+
   flex-direction: column;
-  justify-content: space-evenly;
-  /* background-color: green; */
+  justify-content: space-between;
   height: 100%;
-  //width: 100%;
   padding: 0em 4em;
   .do-you-want {
     font-size: 1.2em;
@@ -657,14 +623,30 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
     align-self: flex-start;
   }
 
-  .time {
-    color: ${colors.coolBlue};
-    align-self: center;
+  .time-row {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+  }
 
-    // padding-top: 2em;
+  .time-icon {
+    font-size: 1.7em;
+    padding-top: 0.3em;
+  }
+
+  .time {
+    color: ${colors.coolBlue};
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 1.3em;
+  }
+
+  .time-day {
+    font-size: 1.1em;
+  }
+
+  .time-text {
+    font-size: 1.7em;
   }
 
   a {
@@ -676,10 +658,6 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
 
   a:hover {
     cursor: pointer;
-  }
-
-  .button-layout {
-    // padding-top: 5.5em;
   }
 
   .tertiary {
@@ -724,6 +702,7 @@ const ConflictView = ({
 const StyledConflictView = styled(ConflictView)`
   display: flex;
   flex-direction: column;
+  padding: 0em 4em;
   .do-you-want {
     font-size: 1.2em;
     padding: 0.5em;
@@ -770,6 +749,8 @@ const StyledConflictView = styled(ConflictView)`
   }
 `;
 
+type IMode = "loading" | "form" | "success" | "conflict" | "already" | "loadingAndNew";
+
 export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => void }) {
   const [barber] = useState("Mitch");
   const [day, setDay] = useState<IDays | null>(null);
@@ -778,16 +759,14 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [times, setTimes] = useState<ITimesObject | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
-  const [isAlreadyScheduled, setIsAlreadyScheduled] = useState(false);
-  const [isSuccessfullAppointment, setIsSuccessfulAppointment] = useState(false);
-  const [hasConflict, setHasConflict] = useState(false);
+  const [mode, setMode] = useState<IMode>("loading");
 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
   useEffect(() => {
-    if (!isLoading) return;
+    if (!(mode === "loading" || mode === "loadingAndNew")) return;
+
     (async () => {
       try {
         const result = await fetch(`${process.env.REACT_APP_URL}/clientObject`);
@@ -818,10 +797,15 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
         }
       } catch (e) {
       } finally {
-        setIsLoading(false);
+        const is = checkIfAlreadyScheduled();
+        if (is && !(mode === "loadingAndNew")) {
+          setMode("already");
+        } else {
+          setMode("form");
+        }
       }
     })();
-  }, [isLoading]);
+  }, [mode]);
 
   useEffect(() => {
     if (!times || !day || !days) return;
@@ -833,50 +817,47 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
   }, [times, day, days]);
 
   useEffect(() => {
-    setIsAlreadyScheduled(checkIfAlreadyScheduled());
-  }, []);
-
+    const is = checkIfAlreadyScheduled();
+    if (mode === "loading") {
+      setMode("already");
+    } else {
+    }
+    console.log(is, "Is");
+  }, [mode]);
+  console.log(mode, "mode");
   return (
     <Column>
-      {isSuccessfullAppointment && (
-        <StyledDialog>
-          <StyledSuccessfulAppointmentView
-            onDone={() => {
-              setShowForm(false);
-            }}
-          />
-        </StyledDialog>
+      {mode === "success" && (
+        <StyledSuccessfulAppointmentView
+          onDone={() => {
+            setShowForm(false);
+            setMode("loading");
+          }}
+        />
       )}
-      {hasConflict && (
-        <StyledDialog>
-          <StyledConflictView
-            day={day}
-            time={time}
-            onDone={() => {
-              setIsLoading(true);
-              setHasConflict(false);
-            }}
-          />
-        </StyledDialog>
+      {mode === "conflict" && (
+        <StyledConflictView
+          day={day}
+          time={time}
+          onDone={() => {
+            setMode("loadingAndNew");
+          }}
+        />
       )}
-      {isAlreadyScheduled && (
-        <StyledDialog>
-          <StyledAlreadyScheduledView
-            handleSubmit={() => {
-              localStorage.clear();
-              setIsAlreadyScheduled(false);
-              setShowForm(true);
-              setIsLoading(true);
-            }}
-            handleGoBack={() => {
-              setIsAlreadyScheduled(false);
-            }}
-          />
-        </StyledDialog>
+      {mode === "already" && (
+        <StyledAlreadyScheduledView
+          handleSubmit={() => {
+            localStorage.clear();
+            setMode("loading");
+          }}
+          handleGoBack={() => {
+            setMode("form");
+          }}
+        />
       )}
-      <FormWrapper>
-        {isLoading && <>{isLoading}</>}
-        {!isLoading && (
+      {mode === "loading" && <>Loading...</>}
+      {mode === "form" && (
+        <FormWrapper>
           <StartColumn>
             <StyledName name={name} setName={setName} />
             <StyledPhoneNumber setPhone={setPhone} />
@@ -895,10 +876,10 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
                   .then((e) => {
                     const status = e.status;
                     if (status === 409) {
-                      setHasConflict(true);
+                      setMode("conflict");
                     } else if (e.ok) {
                       setLocalStorage(day, time, token);
-                      setIsSuccessfulAppointment(true);
+                      setMode("success");
                     } else {
                       throw new Error("unhandled network exception");
                     }
@@ -911,10 +892,17 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
             >
               Confirm
             </StyledConfirm>
-            <StyledCancel onClick={() => setShowForm(false)}>Cancel</StyledCancel>
+            <StyledCancel
+              onClick={() => {
+                setMode("loading");
+                setShowForm(false);
+              }}
+            >
+              Cancel
+            </StyledCancel>
           </StartColumn>
-        )}
-      </FormWrapper>
+        </FormWrapper>
+      )}
     </Column>
   );
 }

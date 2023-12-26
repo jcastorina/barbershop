@@ -14,21 +14,28 @@ const AppView = styled.div`
 
   background-image: url("background-image.jpg");
   background-repeat: repeat;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const StyledLogo = styled.img`
-  width: 10em;
-  height: 10em;
+  padding: 1em;
+  align-self: flex-start;
+  @media (max-width: 500px) {
+    width: 6em;
+    height: 6em;
+  }
+  @media (min-width: 500px) {
+    width: 10em;
+    height: 10em;
+  }
 `;
 
 const Header = styled.div`
   margin-bottom: 2em;
-`;
-
-const ResponsiveWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
+  align-self: flex-start;
 `;
 
 const Content = styled.div`
@@ -40,7 +47,7 @@ const Content = styled.div`
   background-color: white;
   border-radius: 6px;
   box-sizing: content-box;
-  height: 33em;
+  height: 30em;
 `;
 
 const Footer = styled.div`
@@ -105,7 +112,7 @@ const ButtonContainer = styled.div`
   align-items: center;
   width: 100%;
 
-  padding-top: 3em;
+  padding-top: 2em;
 
   a {
     width: 14em;
@@ -152,10 +159,6 @@ const Prices = ({ handleClick, className }: { handleClick: () => void; className
           <td className={"label"}>HAIR & BEARD</td>
           <td className={"price"}>$28</td>
         </tr>
-        {/* <tr className={"table-row"}>
-            <td className={"label"}>BEARD & HAIRCUT</td>
-            <td className={"price"}>$28</td>
-          </tr> */}
       </table>
       <div className={"note-items"}>
         <ul>
@@ -176,26 +179,12 @@ const Prices = ({ handleClick, className }: { handleClick: () => void; className
 
 const StyledPrices = styled(Prices)`
   color: black;
-
-  //width: 30em;
-
-  // width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
-
-  padding: 3em 4em 2em 4em;
-
-  // align-items: center;
-  //margin-top: 2em;
-
-  // background-color: green;
 
   button {
     background: none;
     border: none;
-
-    // margin-top: 1.2em;
 
     font-size: 1em;
   }
@@ -205,14 +194,12 @@ const StyledPrices = styled(Prices)`
   }
 
   .button-wrapper {
-    padding-top: 3em;
+    padding-top: 2em;
     display: grid;
     place-items: center;
   }
 
   .table {
-    //  border: 1px solid pink;
-    // padding-top: 3em;
   }
 
   .table-row {
@@ -220,12 +207,10 @@ const StyledPrices = styled(Prices)`
 
   td {
     border-bottom: 1px solid black;
-    // background-color: blue;
     padding-top: 0.8em;
   }
 
   .label {
-    //  width: 10em;
     font-weight: bold;
     font-size: 1.3em;
     padding-bottom: 0.3em;
@@ -241,9 +226,7 @@ const StyledPrices = styled(Prices)`
     display: flex;
     flex-direction: column;
     font-size: 0.9em;
-    //  padding-left: 5em;
     align-self: flex-start;
-    // padding-top: 0.7em;
 
     color: rgba(44, 44, 44, 1);
   }
@@ -251,46 +234,12 @@ const StyledPrices = styled(Prices)`
   .cash-or-check {
     font-style: italic;
     font-weight: bold;
-    //  margin-top: 1em;
-    // margin-bottom: 0.3em;
   }
 
   .walk-ins {
     font-style: italic;
     font-weight: bold;
-    //   margin-top: 0.2em;
   }
-`;
-
-const Dialog = ({
-  children,
-  className,
-}: {
-  children: JSX.Element | JSX.Element[];
-  className?: string;
-}) => <div className={className}>{children}</div>;
-
-const StyledDialog = styled(Dialog)`
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  //padding: 3em 0em;
-  min-width: 23em;
-  max-width: 33em;
-  align-items: center;
-  background-color: white;
-  border-radius: 6px;
-  box-sizing: content-box;
-  height: 39em;
-  overflow: hidden;
-
-  background-color: rgba(255, 255, 255, 1);
-
-  border-radius: 6px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 `;
 
 function App() {
@@ -333,52 +282,39 @@ function App() {
       <Header>
         <StyledLogo src={"main-logo.png"} alt={"Jefferson Street Barber Shop"}></StyledLogo>
       </Header>
-      <ResponsiveWrapper>
-        {showPrices && (
-          <StyledDialog>
-            <StyledPrices handleClick={() => setShowPrices(false)} />
-          </StyledDialog>
+      <Content>
+        {showPrices && <StyledPrices handleClick={() => setShowPrices(false)} />}
+        {showForm && <ScheduleForm setShowForm={setShowForm} />}
+        {!showForm && !showPrices && (
+          <ButtonContainer>
+            <Anchor
+              className={"make-appointment-button"}
+              onClick={() => {
+                setShowForm(true);
+              }}
+            >
+              MAKE AN APPOINTMENT
+            </Anchor>
+            <hr />
+            <Anchor
+              onClick={() => {
+                setShowPrices(true);
+              }}
+            >
+              PRICES
+            </Anchor>
+            <Anchor
+              href={
+                "https://www.google.com/maps/dir//Jefferson+Street+Barbershop/data=!4m8!4m7!1m0!1m5!1m1!1s0x52b323ea2726a801:0x2a911b3a0c1e3412!2m2!1d-93.2566332!2d45.182939"
+              }
+              target={"_blank"}
+            >
+              GET DIRECTIONS
+            </Anchor>
+            <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
+          </ButtonContainer>
         )}
-        <Content>
-          {showForm && <ScheduleForm setShowForm={setShowForm} />}
-          {!showForm && (
-            <ButtonContainer>
-              <Anchor
-                className={"make-appointment-button"}
-                onClick={() => {
-                  setShowForm(true);
-                }}
-              >
-                MAKE AN APPOINTMENT
-              </Anchor>
-              <hr />
-              <Anchor
-                onClick={() => {
-                  setShowPrices(true);
-                }}
-              >
-                PRICES
-              </Anchor>
-              <Anchor
-                href={
-                  "https://www.google.com/maps/dir//Jefferson+Street+Barbershop/data=!4m8!4m7!1m0!1m5!1m1!1s0x52b323ea2726a801:0x2a911b3a0c1e3412!2m2!1d-93.2566332!2d45.182939"
-                }
-                target={"_blank"}
-              >
-                GET DIRECTIONS
-              </Anchor>
-              <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
-              {/* <Anchor
-                onClick={() => {
-                  fetch(`${process.env.REACT_APP_URL}/addDay/0`);
-                }}
-              >
-                Add Day
-              </Anchor> */}
-            </ButtonContainer>
-          )}
-        </Content>
-      </ResponsiveWrapper>
+      </Content>
 
       <Footer>Proudly serving since 2013</Footer>
     </AppView>
@@ -386,34 +322,3 @@ function App() {
 }
 
 export default App;
-// <Colors showColors={showColors} />
-// <Footer>Footer Content</Footer>
-// <GuideButton handleClick={() => setShowColors((show) => !show)} />
-
-// useEffect(() => {
-//   const pathname = window.location.pathname;
-
-//   if (pathname === "/admin") {
-//     setAdminLoginView(true);
-//   }
-// }, []);
-
-// if (adminLoggedIn) {
-//   return (
-//     <StyledAdminLoggedIn
-//       setAdminLoggedIn={setAdminLoggedIn}
-//       setAdminLoginView={setAdminLoginView}
-//     />
-//   );
-// }
-
-// if (adminLoginView) {
-//   return (
-//     <StyledAdminLoginView
-//       password={password}
-//       setPassword={setPassword}
-//       setAdminLoggedIn={setAdminLoggedIn}
-//       setAdminLoginView={setAdminLoginView}
-//     />
-//   );
-// }
