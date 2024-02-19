@@ -17,7 +17,7 @@ const app = express();
 app.use(express.static(path.join(__dirname, "build")));
 app.use(cors({ optionsSuccessStatus: 200, origin: "*" }));
 app.use(express.text());
-
+console.log("force");
 const PORT = 3001;
 const tz = process.env.TZ || "America/Chicago";
 
