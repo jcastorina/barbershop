@@ -25,8 +25,8 @@ console.log(mode, "mode");
 let Bucket = process.env.AWS_BUCKET;
 let Filename = process.env.AWS_SCHEDULE_FILE;
 let scheduleJson;
-console.log(process.env);
-if (Boolean(process.env.DEVELOPMENT) === true) {
+
+if (process.env.DEVELOPMENT === "true") {
   const obj = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -36,6 +36,7 @@ if (Boolean(process.env.DEVELOPMENT) === true) {
 
   app.listen(PORT, () => console.log(`app listening on port ${process.env.PORT || PORT}`));
 } else {
+  console.log("production");
   const httpsOptions = {
     cert: fs.readFileSync(path.join(__dirname, "..", "fullchain.pem")),
     key: fs.readFileSync(path.join(__dirname, "..", "privkey.pem")),
