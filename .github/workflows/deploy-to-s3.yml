@@ -10,56 +10,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test AWS Access Key ID
-        run: |
-          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
-          echo "AWS_ACCESS_KEY_ID is empty"
-          else
-          echo "AWS_ACCESS_KEY_ID is set"
-          fi
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      # - name: Test AWS Access Key ID
+      #   run: |
+      #     if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+      #     echo "AWS_ACCESS_KEY_ID is empty"
+      #     else
+      #     echo "AWS_ACCESS_KEY_ID is set"
+      #     fi
+      # - name: Checkout Repository
+      #   uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "16"
+      # - name: Set up Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: "16"
 
-      - name: Build React App
-        env:
-          REACT_APP_URL: ${{ secrets.REACT_APP_URL }}
-        run: |
-          npm install
-          npm run build
+      # - name: Build React App
+      #   env:
+      #     REACT_APP_URL: ${{ secrets.REACT_APP_URL }}
+      #   run: |
+      #     npm install
+      #     npm run build
 
-      - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@v0.5.1
-        with:
-          args: --follow-symlinks --delete
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-2"
-          SOURCE_DIR: "build"
-          TZ:
-            ${{ secrets.TZ }}
+      # - name: Deploy to S3
+      #   uses: jakejarvis/s3-sync-action@v0.5.1
+      #   with:
+      #     args: --follow-symlinks --delete
+      #   env:
+      #     AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_REGION: "us-west-2"
+      #     SOURCE_DIR: "build"
+      #     TZ:
+      #       ${{ secrets.TZ }}
 
-            # SSH and Deploy Express Server to EC2
+      # SSH and Deploy Express Server to EC2
       - name: Deploy Express Server to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.NOT_AN_SSH_KEY_HAHA }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          sudo mkdir -p ~/.ssh
+          sudo echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          sudo chmod 600 ~/.ssh/id_rsa
+          sudo ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-          rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:/server
+          sudo rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:/server
 
-          ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
+          sudo ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
             cd /server
             npm install
             pm2 start server.js --name barbershop-app || pm2 restart my-app
