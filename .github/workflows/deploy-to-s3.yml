@@ -60,6 +60,5 @@ jobs:
           rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:~/server
 
           ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
-            npm install
-            pm2 start server.js --name barbershop-app || pm2 restart barbershop-app
+             ls -altrh
           EOF
