@@ -61,5 +61,5 @@ jobs:
 
           ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
              cd server
-             ls -altrh
+             npm install
           EOF
