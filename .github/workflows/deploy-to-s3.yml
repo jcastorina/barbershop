@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Test AWS Access Key ID
-      #   run: |
-      #     if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
-      #     echo "AWS_ACCESS_KEY_ID is empty"
-      #     else
-      #     echo "AWS_ACCESS_KEY_ID is set"
-      #     fi
+      - name: Test AWS Access Key ID
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+          echo "AWS_ACCESS_KEY_ID is empty"
+          else
+          echo "AWS_ACCESS_KEY_ID is set"
+          fi
       - name: Checkout Repository
         uses: actions/checkout@v4
 
