@@ -57,7 +57,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-          rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:/server
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:~/server
 
           ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
             cd /server
