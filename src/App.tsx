@@ -7,6 +7,18 @@ import { colors } from "./utilities";
 
 const mediaBreak = "830px";
 
+const IsMaintenance = styled.div`
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  z-index: 999;
+`;
+
 const AppView = styled.div`
   box-sizing: content-box;
 
@@ -292,46 +304,50 @@ function App() {
   }
 
   return (
-    <AppView>
-      <Header>
-        <StyledLogo src={"main-logo.png"} alt={"Jefferson Street Barber Shop"}></StyledLogo>
-      </Header>
-      <Content>
-        {showPrices && <StyledPrices handleClick={() => setShowPrices(false)} />}
-        {showForm && <ScheduleForm setShowForm={setShowForm} />}
-        {!showForm && !showPrices && (
-          <ButtonContainer>
-            <Anchor
-              className={"make-appointment-button"}
-              onClick={() => {
-                setShowForm(true);
-              }}
-            >
-              MAKE AN APPOINTMENT
-            </Anchor>
-            <hr />
-            <Anchor
-              onClick={() => {
-                setShowPrices(true);
-              }}
-            >
-              PRICES
-            </Anchor>
-            <Anchor
-              href={
-                "https://www.google.com/maps/dir//Jefferson+Street+Barbershop/data=!4m8!4m7!1m0!1m5!1m1!1s0x52b323ea2726a801:0x2a911b3a0c1e3412!2m2!1d-93.2566332!2d45.182939"
-              }
-              target={"_blank"}
-            >
-              GET DIRECTIONS
-            </Anchor>
-            <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
-          </ButtonContainer>
-        )}
-      </Content>
+    <>
+      <IsMaintenance>Under maintenance! Will be back up by Tuesday morning</IsMaintenance>
 
-      <Footer>Proudly serving since 2013</Footer>
-    </AppView>
+      <AppView>
+        <Header>
+          <StyledLogo src={"main-logo.png"} alt={"Jefferson Street Barber Shop"}></StyledLogo>
+        </Header>
+        <Content>
+          {showPrices && <StyledPrices handleClick={() => setShowPrices(false)} />}
+          {showForm && <ScheduleForm setShowForm={setShowForm} />}
+          {!showForm && !showPrices && (
+            <ButtonContainer>
+              <Anchor
+                className={"make-appointment-button"}
+                onClick={() => {
+                  setShowForm(true);
+                }}
+              >
+                MAKE AN APPOINTMENT
+              </Anchor>
+              <hr />
+              <Anchor
+                onClick={() => {
+                  setShowPrices(true);
+                }}
+              >
+                PRICES
+              </Anchor>
+              <Anchor
+                href={
+                  "https://www.google.com/maps/dir//Jefferson+Street+Barbershop/data=!4m8!4m7!1m0!1m5!1m1!1s0x52b323ea2726a801:0x2a911b3a0c1e3412!2m2!1d-93.2566332!2d45.182939"
+                }
+                target={"_blank"}
+              >
+                GET DIRECTIONS
+              </Anchor>
+              <Anchor href={"tel:+1-612-524-8519"}>CALL</Anchor>
+            </ButtonContainer>
+          )}
+        </Content>
+
+        <Footer>Proudly serving since 2013</Footer>
+      </AppView>
+    </>
   );
 }
 

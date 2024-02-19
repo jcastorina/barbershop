@@ -816,14 +816,11 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
   }, [times, day, days]);
 
   useEffect(() => {
-    const is = checkIfAlreadyScheduled();
     if (mode === "loading") {
       setMode("already");
     } else {
     }
-    console.log(is, "Is");
   }, [mode]);
-  console.log(mode, "mode");
   return (
     <Column>
       {mode === "success" && (

@@ -42,4 +42,25 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-2"
           SOURCE_DIR: "build"
-          TZ: ${{ secrets.AWS_APP_TZ }}
+          TZ:
+            ${{ secrets.TZ }}
+
+            # SSH and Deploy Express Server to EC2
+      - name: Deploy Express Server to EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.NOT_AN_SSH_KEY_HAHA }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:/server
+
+          ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
+            cd /server
+            npm install
+            pm2 start server.js --name barbershop-app || pm2 restart my-app
+          EOF
