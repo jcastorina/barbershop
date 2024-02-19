@@ -52,15 +52,15 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          sudo mkdir -p ~/.ssh
-          sudo echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          sudo chmod 600 ~/.ssh/id_rsa
-          sudo ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-          sudo rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:/server
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server/ $EC2_USER@$EC2_HOST:/server
 
-          sudo ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
+          ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
             cd /server
             npm install
-            pm2 start server.js --name barbershop-app || pm2 restart my-app
+            pm2 start server.js --name barbershop-app || pm2 restart barbershop-app
           EOF
