@@ -36,8 +36,8 @@ if (Boolean(process.env.DEVELOPMENT) === true) {
   app.listen(PORT, () => console.log(`app listening on port ${process.env.PORT || PORT}`));
 } else {
   const httpsOptions = {
-    cert: fs.readFileSync(path.join(__dirname, "fullchain.pem")),
-    key: fs.readFileSync(path.join(__dirname, "privkey.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "..", "fullchain.pem")),
+    key: fs.readFileSync(path.join(__dirname, "..", "privkey.pem")),
   };
   https.createServer(httpsOptions, app).listen(PORT, function () {
     console.log(`Express server listening on port ${PORT}`);
