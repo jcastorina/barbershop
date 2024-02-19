@@ -20,6 +20,7 @@ const PORT = process.env.PORT || 3001;
 const tz = process.env.TZ || "America/Chicago";
 
 let mode = "init";
+console.log(mode, "mode");
 
 let Bucket = process.env.AWS_BUCKET;
 let Filename = process.env.AWS_SCHEDULE_FILE;
