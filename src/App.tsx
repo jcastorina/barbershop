@@ -14,7 +14,7 @@ import {
   ButtonContainer,
 } from "./components";
 
-const isMaintenance = false;
+const isMaintenance = true;
 
 function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
