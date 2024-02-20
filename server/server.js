@@ -25,9 +25,7 @@ let Bucket = process.env.AWS_BUCKET;
 let Filename = process.env.AWS_SCHEDULE_FILE;
 let scheduleJson;
 
-console.log(process.env.DEVELOPMENT, typeof process.env.DEVELOPMENT);
 if (process.env.DEVELOPMENT === "true") {
-  console.log("development");
   const obj = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -37,7 +35,6 @@ if (process.env.DEVELOPMENT === "true") {
 
   app.listen(PORT, () => console.log(`app listening on port ${process.env.PORT || PORT}`));
 } else {
-  console.log("production");
   const httpsOptions = {
     cert: fs.readFileSync(path.join(__dirname, "..", "fullchain.pem")),
     key: fs.readFileSync(path.join(__dirname, "..", "privkey.pem")),
@@ -50,46 +47,6 @@ if (process.env.DEVELOPMENT === "true") {
 const s3 = new AWS.S3();
 
 //#endregion runtime setup
-
-//#region bucket functions
-
-function uploadFile(Bucket, Body, Key = Filename) {
-  const params = {
-    Bucket,
-    Key,
-    Body,
-    ContentType: "application/json",
-  };
-
-  s3.upload(params, function (err, data) {
-    if (err) {
-      // handle this?
-      console.log(err, err?.stack);
-    }
-  });
-}
-
-function getFile(Bucket, Key = Filename) {
-  const params = {
-    Bucket,
-    Key,
-  };
-
-  s3.getObject(params, function (err, data) {
-    if (err) {
-      // handle this?
-      console.log(err, err.stack);
-    } else {
-      scheduleJson = JSON.parse(data.Body.toString("utf-8"));
-      // console.log(scheduleJson, "got scheduleJson");
-      mode = "ready";
-    }
-  });
-}
-
-getFile(Bucket);
-
-//#endregion bucket functions
 
 //#region time setup
 
@@ -111,11 +68,11 @@ const defaultSched = Object.freeze({
 });
 
 const schedule = {
-  Today: {
+  day0: {
     hours: day !== 0 || day !== 1 ? defaultSched[day.toString()] : null,
     appts: [],
   },
-  Tomorrow: {
+  day1: {
     hours: day !== 0 || day !== 1 ? defaultSched[((day + 1) % 7).toString()] : null,
     appts: [
       // { name: "joe", phone: 1234567890, time: "10:30 AM", barber: "mitch" },
@@ -132,6 +89,7 @@ const schedule = {
       // { name: "jsadgooe", phone: 2234659990, time: "1:30 PM", barber: "mitch" },
     ],
   },
+  day2: {},
 };
 
 const makeHours = (start, hours) => {
@@ -212,11 +170,11 @@ const removeTime = (times = [], time) => {
 };
 
 const getAvailableTimes = (schedule) => {
-  const todayHoursRange = schedule.Today.hours;
-  const tomorrowHoursRange = schedule.Tomorrow.hours;
+  const todayHoursRange = schedule.day0.hours;
+  const tomorrowHoursRange = schedule.day1.hours;
 
-  const today = schedule.Today.appts;
-  const tomorrow = schedule.Tomorrow.appts;
+  const today = schedule.day0.appts;
+  const tomorrow = schedule.day1.appts;
 
   let Today = null;
   let Tomorrow = null;
@@ -282,24 +240,65 @@ const checkDayElapsed = (tz) => {
   lastRequestTimestamp = currentTime;
 
   if (daysElapsed === 1) {
-    const appts = [...schedule.Tomorrow.appts].map((appt) => ({ ...appt, day: "Today" }));
-    schedule.Tomorrow.appts = appts;
-    schedule.Today = { ...schedule.Tomorrow };
-    schedule.Tomorrow.appts = [];
-    schedule.Tomorrow.hours = tomorrowHours;
+    const appts = [...schedule.day1.appts].map((appt) => ({ ...appt, day: "Today" }));
+    schedule.day1.appts = appts;
+    schedule.day0 = { ...schedule.day1 };
+    schedule.day1.appts = [];
+    schedule.day1.hours = tomorrowHours;
     return;
   }
 
   if (daysElapsed > 1) {
-    schedule.Today.appts = [];
-    schedule.Today.hours = todayHours;
-    schedule.Tomorrow.appts = [];
-    schedule.Tomorrow.hours = tomorrowHours;
+    schedule.day0.appts = [];
+    schedule.day0.hours = todayHours;
+    schedule.day1.appts = [];
+    schedule.day1.hours = tomorrowHours;
     return;
   }
 };
 
 //#endregion time functions
+
+//#region bucket functions
+
+function uploadFile(Bucket, Body, Key = Filename) {
+  const params = {
+    Bucket,
+    Key,
+    Body,
+    ContentType: "application/json",
+  };
+
+  s3.upload(params, function (err, data) {
+    if (err) {
+      // handle this?
+      console.log(err, err?.stack);
+    }
+  });
+}
+
+function getFile(Bucket, Key = Filename) {
+  const params = {
+    Bucket,
+    Key,
+  };
+
+  s3.getObject(params, function (err, data) {
+    if (err) {
+      // handle this?
+      console.log(err, err.stack);
+    } else {
+      scheduleJson = JSON.parse(data.Body.toString("utf-8"));
+      schedule.day0.appts = scheduleJson.day0;
+      schedule.day1.appts = scheduleJson.day1;
+      mode = "ready";
+    }
+  });
+}
+
+getFile(Bucket);
+
+//#endregion bucket functions
 
 //#region route handlers
 app.get("/addDay/:id", (req, res) => {
@@ -310,7 +309,6 @@ app.get("/addDay/:id", (req, res) => {
 
 app.get("/clientObject", (req, res) => {
   checkDayElapsed(tz);
-  console.log(schedule, scheduleJson, "schedule");
   const timesObject = getAvailableTimes(schedule);
   const token = uuid();
 
@@ -327,7 +325,7 @@ app.get("/adminObject", (req, res) => {
 app.get("/adminTodayAppts", (req, res) => {
   checkDayElapsed(tz);
 
-  const sorted = schedule.Today.appts.sort((a, b) => {
+  const sorted = schedule.day0.appts.sort((a, b) => {
     const h1 = defaultHours.indexOf(a.time);
     const h2 = defaultHours.indexOf(b.time);
     return h1 - h2;
@@ -339,8 +337,7 @@ app.get("/adminTodayAppts", (req, res) => {
 
 app.get("/adminTomorrowAppts", (req, res) => {
   checkDayElapsed(tz);
-
-  const sorted = schedule.Tomorrow.appts.sort((a, b) => {
+  const sorted = schedule.day1.appts.sort((a, b) => {
     const h1 = defaultHours.indexOf(a.time);
     const h2 = defaultHours.indexOf(b.time);
     return h1 - h2;
@@ -355,8 +352,8 @@ app.post("/adminUpdateSchedule", (req, res) => {
   const result = JSON.parse(req.body);
 
   const { Today, Tomorrow } = result;
-  schedule.Today.hours = Today.hours;
-  schedule.Tomorrow.hours = Tomorrow.hours;
+  schedule.day0.hours = Today.hours;
+  schedule.day1.hours = Tomorrow.hours;
 
   res.status(200);
   return res.end();
@@ -404,8 +401,8 @@ app.post("/newAppointment", (req, res) => {
 app.post("/deleteAppointment", (req, res) => {
   const token = req.body;
 
-  schedule.Today.appts = schedule.Today.appts.filter((appt) => appt.token !== token);
-  schedule.Tomorrow.appts = schedule.Tomorrow.appts.filter((appt) => appt.token !== token);
+  schedule.day0.appts = schedule.day0.appts.filter((appt) => appt.token !== token);
+  schedule.day1.appts = schedule.day1.appts.filter((appt) => appt.token !== token);
 
   res.status(200);
   return res.end();
