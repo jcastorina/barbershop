@@ -161,7 +161,7 @@ const Days = ({
           onChange={(e) => {
             setDay(e.target.value as IDays);
           }}
-          value={day === "Today" ? "day0" : "day1"}
+          value={day}
         >
           {days.map((day) => (
             <option value={day}>{day}</option>
@@ -880,7 +880,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
                     if (status === 409) {
                       setMode("conflict");
                     } else if (e.ok) {
-                      setLocalStorage(day as "day0" | "day1", time, token);
+                      setLocalStorage(day === "Today" ? "day0" : "day1", time, token);
                       setMode("success");
                     } else {
                       throw new Error("unhandled network exception");
