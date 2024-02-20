@@ -161,7 +161,7 @@ const Days = ({
           onChange={(e) => {
             setDay(e.target.value as IDays);
           }}
-          value={day}
+          value={day === "Today" ? "day0" : "day1"}
         >
           {days.map((day) => (
             <option value={day}>{day}</option>
@@ -492,9 +492,13 @@ const checkIfAlreadyScheduled = (): boolean => {
   return false;
 };
 
-const setLocalStorage = (day: IDays | null, time: string | null, token: string | null) => {
+const setLocalStorage = (
+  day: "day0" | "day1" | null,
+  time: string | null,
+  token: string | null
+) => {
   let time1 = moment(time, "h:mm A");
-  if (day === "Tomorrow") {
+  if (day === "day1") {
     time1.add(1, "day");
     localStorage.setItem("scheduledDay", "Tomorrow");
   } else {
@@ -865,16 +869,18 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
             <StyledConfirm
               disabled={isNotReady()}
               onClick={async () => {
+                console.log(day, "day");
                 await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
                   method: "post",
                   body: JSON.stringify({ day, time, barber, name, phone, token }),
                 })
                   .then((e) => {
                     const status = e.status;
+                    console.log(status, "status ");
                     if (status === 409) {
                       setMode("conflict");
                     } else if (e.ok) {
-                      setLocalStorage(day, time, token);
+                      setLocalStorage(day as "day0" | "day1", time, token);
                       setMode("success");
                     } else {
                       throw new Error("unhandled network exception");

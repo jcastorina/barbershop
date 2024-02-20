@@ -32,9 +32,10 @@ if (process.env.DEVELOPMENT === "true") {
     region: process.env.AWS_REGION,
   };
   AWS.config.update(obj);
-
+  Filename = process.env.AWS_SCHEDULE_FILE;
   app.listen(PORT, () => console.log(`app listening on port ${process.env.PORT || PORT}`));
 } else {
+  Filename = process.env.AWS_PROD_SCHEDULE_FILE;
   const httpsOptions = {
     cert: fs.readFileSync(path.join(__dirname, "..", "fullchain.pem")),
     key: fs.readFileSync(path.join(__dirname, "..", "privkey.pem")),
@@ -67,7 +68,7 @@ const defaultSched = Object.freeze({
   6: [8, 23],
 });
 
-const schedule = {
+let schedule = {
   day0: {
     hours: day !== 0 || day !== 1 ? defaultSched[day.toString()] : null,
     appts: [],
@@ -261,19 +262,25 @@ const checkDayElapsed = (tz) => {
 
 //#region bucket functions
 
-function uploadFile(Bucket, Body, Key = Filename) {
+async function uploadFile(Bucket, Body, Key = Filename) {
   const params = {
     Bucket,
     Key,
-    Body,
+    Body: JSON.stringify(Body),
     ContentType: "application/json",
   };
 
-  s3.upload(params, function (err, data) {
-    if (err) {
-      // handle this?
-      console.log(err, err?.stack);
-    }
+  return new Promise((resolve, reject) => {
+    s3.upload(params, function (err, data) {
+      if (err) {
+        // handle this?
+        reject("error");
+        console.log(err, err?.stack);
+      } else {
+        console.log("success");
+        resolve("success");
+      }
+    });
   });
 }
 
@@ -289,8 +296,7 @@ function getFile(Bucket, Key = Filename) {
       console.log(err, err.stack);
     } else {
       scheduleJson = JSON.parse(data.Body.toString("utf-8"));
-      schedule.day0.appts = scheduleJson.day0;
-      schedule.day1.appts = scheduleJson.day1;
+      schedule = scheduleJson;
       mode = "ready";
     }
   });
@@ -359,10 +365,16 @@ app.post("/adminUpdateSchedule", (req, res) => {
   return res.end();
 });
 
-app.post("/newAppointment", (req, res) => {
+app.post("/newAppointment", async (req, res) => {
   const result = JSON.parse(req.body);
 
-  const { day, time, barber, name, phone, token } = result;
+  const { day: $day, time, barber, name, phone, token } = result;
+  let day;
+  if ($day === "Today") {
+    day = "day0";
+  } else if ($day === "Tomorrow") {
+    day = "day1";
+  }
 
   if (
     typeof day !== "string" ||
@@ -374,6 +386,7 @@ app.post("/newAppointment", (req, res) => {
   ) {
     return res.status(400);
   }
+  console.log(day, schedule[day]);
   const existingAppts = schedule[day].appts;
 
   const hasExisting = existingAppts.filter((appt) => appt.time === time).length;
@@ -393,6 +406,8 @@ app.post("/newAppointment", (req, res) => {
   };
 
   schedule[day].appts.push(appointmentRecord);
+
+  await uploadFile(Bucket, schedule);
 
   res.status(200);
   return res.end();
