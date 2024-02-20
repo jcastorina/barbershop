@@ -20,13 +20,14 @@ const PORT = process.env.PORT || 3001;
 const tz = process.env.TZ || "America/Chicago";
 
 let mode = "init";
-console.log(mode, "mode");
 
 let Bucket = process.env.AWS_BUCKET;
 let Filename = process.env.AWS_SCHEDULE_FILE;
 let scheduleJson;
 
+console.log(process.env.DEVELOPMENT, typeof process.env.DEVELOPMENT);
 if (process.env.DEVELOPMENT === "true") {
+  console.log("development");
   const obj = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -80,7 +81,7 @@ function getFile(Bucket, Key = Filename) {
       console.log(err, err.stack);
     } else {
       scheduleJson = JSON.parse(data.Body.toString("utf-8"));
-      console.log(scheduleJson, "got scheduleJson");
+      // console.log(scheduleJson, "got scheduleJson");
       mode = "ready";
     }
   });
