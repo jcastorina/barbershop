@@ -437,7 +437,7 @@ const StyledAppointmentView = styled(AppointmentView)`
   }
 `;
 
-type IDays = "Today" | "Tomorrow";
+type IDays = "day0" | "day1" | "day2";
 
 type IAppointmentRecord = {
   name: string;
@@ -532,20 +532,20 @@ function AdminLoggedIn({
       const adminObjectJSON = await adminResult.text();
       const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
 
-      if (adminObject.Today.hours === null) {
+      if (adminObject.day0.hours === null) {
         setIsTodayClosed(true);
       } else {
-        if (adminObject.Today.hours.length === 2) {
-          const hours = adminObject.Today.hours;
+        if (adminObject.day0.hours.length === 2) {
+          const hours = adminObject.day0.hours;
           setTodayOpen(hours[0]);
           setTodayClosed(hours[1]);
         }
       }
-      if (adminObject.Tomorrow.hours === null) {
+      if (adminObject.day1.hours === null) {
         setIsTomorrowClosed(true);
       } else {
-        if (adminObject.Tomorrow.hours.length === 2) {
-          const hours = adminObject.Tomorrow.hours;
+        if (adminObject.day1.hours.length === 2) {
+          const hours = adminObject.day1.hours;
           setTomorrowOpen(hours[0]);
           setTomorrowClosed(hours[1]);
         }
