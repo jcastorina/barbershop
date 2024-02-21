@@ -196,7 +196,7 @@ const getAvailableTimes = (schedule) => {
       );
     }
     if (todayHoursRange && todayHoursRange[1] >= 15) {
-      const removedArray = removeTime(Today, "12:30 PM");
+      const removedArray = removeTime(Today, "11:30 PM");
       if (removedArray) {
         Today = removedArray;
       }
@@ -210,7 +210,7 @@ const getAvailableTimes = (schedule) => {
     );
   }
   if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
-    const removedArray = removeTime(Tomorrow, "12:30 PM");
+    const removedArray = removeTime(Tomorrow, "11:30 PM");
     if (removedArray) {
       Tomorrow = removedArray;
     }
