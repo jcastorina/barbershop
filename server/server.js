@@ -210,7 +210,7 @@ const getAvailableTimes = (schedule) => {
     );
   }
   if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
-    const removedArray = removeTime(Tomorrow, "10:30 PM");
+    const removedArray = removeTime(Tomorrow, "10:30 AM");
     if (removedArray) {
       Tomorrow = removedArray;
     }
