@@ -59,13 +59,13 @@ const date = getWithOffset(tz); //moment().tz(tz);
 const day = date.day();
 
 const defaultSched = Object.freeze({
-  0: [8, 23],
-  1: [8, 23],
+  0: null,
+  1: null,
   2: [8, 18],
   3: [8, 18],
   4: [8, 18],
   5: [8, 18],
-  6: [8, 23],
+  6: [8, 15],
 });
 
 let schedule = {
@@ -196,7 +196,7 @@ const getAvailableTimes = (schedule) => {
       );
     }
     if (todayHoursRange && todayHoursRange[1] >= 15) {
-      const removedArray = removeTime(Today, "11:30 AM");
+      const removedArray = removeTime(Today, "12:30 PM");
       if (removedArray) {
         Today = removedArray;
       }
@@ -210,7 +210,7 @@ const getAvailableTimes = (schedule) => {
     );
   }
   if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
-    const removedArray = removeTime(Tomorrow, "11:30 AM");
+    const removedArray = removeTime(Tomorrow, "12:30 PM");
     if (removedArray) {
       Tomorrow = removedArray;
     }
