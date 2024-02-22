@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 
-export const EmployeeRoster = ({}) => {
+export const EmployeeRoster = () => {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
