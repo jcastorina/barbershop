@@ -65,6 +65,20 @@ try {
   fs.writeFileSync("./lastTimestamp.txt", date.toString());
 }
 
+let employees;
+console.log("starting up after employees");
+const setPersistentEmployees = (employees) => {
+  fs.writeFileSync("./employees.txt", JSON.stringify(employees));
+};
+
+try {
+  employees = JSON.parse(fs.readFileSync("./employees.txt").toString());
+  console.log("try block", employees);
+} catch (e) {
+  employees = ["Mitch"];
+  fs.writeFileSync("./employees.txt", JSON.stringify(employees));
+}
+
 const day = date.day();
 
 const defaultSched = Object.freeze({
@@ -445,8 +459,6 @@ app.post("/loginAdmin", (req, res) => {
   return res.end();
 });
 
-let employees = ["Mitch", "New Guy"];
-
 app.post("/deleteEmployee", (req, res) => {
   if (typeof req.body === "string") {
     const employee = req.body;
@@ -458,6 +470,7 @@ app.post("/deleteEmployee", (req, res) => {
       const tail = employees.slice(idx + 1, employees.length);
       employees = [...head, ...tail];
     }
+    setPersistentEmployees(employees);
     res.status(200);
   } else {
     res.status(401);
@@ -474,6 +487,7 @@ app.get("/employees", (req, res) => {
 app.post("/addEmployee", (req, res) => {
   if (typeof req.body === "string") {
     employees.push(req.body);
+    setPersistentEmployees(employees);
     res.status(200);
   } else {
     res.status(401);

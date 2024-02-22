@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 
 export const EmployeeRoster = () => {
-  const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   async function deleteEmployee(employee: string) {
@@ -26,10 +26,9 @@ export const EmployeeRoster = () => {
       const url = `${process.env.REACT_APP_URL}/employees`;
       console.log(url);
       const result = await fetch(url);
-      const text = await result.text();
-      console.log(text, "text");
+      const employees = await result.json();
 
-      const employees = JSON.parse(text);
+      //   const employees = JSON.parse(text);
       if (typeof employees === "object") {
         setEmployees(employees);
       }
@@ -50,19 +49,10 @@ export const EmployeeRoster = () => {
         >
           <input
             placeholder="employee name"
-            //value={addEmployee}
-            //  onChange={(e) => setAddEmployee(e.target.value)}
             style={{ marginBottom: "1.3em" }}
             disabled={employees.length > 4}
           />
-          <button
-            type="submit"
-            disabled={employees.length > 4}
-            // onClick={(e) => {
-            //   e.preventDefault();
-            //   //   console.log(e.target);
-            // }}
-          >
+          <button type="submit" disabled={employees.length > 4}>
             Add
           </button>
         </form>
@@ -71,7 +61,9 @@ export const EmployeeRoster = () => {
         ? employees.map((employee) => (
             <div>
               <b>
-                <i>{employee}</i>
+                <span>
+                  <i>{employee}</i>
+                </span>
               </b>
               <button
                 onClick={async () => {
