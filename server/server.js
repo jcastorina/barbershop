@@ -436,4 +436,41 @@ app.post("/loginAdmin", (req, res) => {
   return res.end();
 });
 
+let employees = ["Mitch", "New Guy"];
+
+app.post("/deleteEmployee", (req, res) => {
+  if (typeof req.body === "string") {
+    const employee = req.body;
+    const idx = employees.indexOf(employee);
+    if (idx === 0 && employees.length < 2) {
+      employees = [];
+    } else {
+      const head = employees.slice(0, idx);
+      const tail = employees.slice(idx + 1, employees.length);
+      employees = [...head, ...tail];
+    }
+    res.status(200);
+  } else {
+    res.status(401);
+  }
+
+  return res.end();
+});
+
+app.get("/employees", (req, res) => {
+  res.write(JSON.stringify(employees));
+  return res.end();
+});
+
+app.post("/addEmployee", (req, res) => {
+  if (typeof req.body === "string") {
+    employees.push(req.body);
+    res.status(200);
+  } else {
+    res.status(401);
+  }
+
+  res.end();
+});
+
 //#endregion route handlers

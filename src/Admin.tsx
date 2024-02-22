@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { EmployeeRoster } from "./components/admin";
 
 function AdminLoginView({
   password,
@@ -468,7 +469,6 @@ function AdminLoggedIn({
   className?: string;
 }) {
   const [showModal, setShowModal] = useState(false);
-  const [addEmployee, setAddEmployee] = useState("");
   const [selected] = useState("");
 
   // const [employees, setEmployees] = useState(["Mitch"]);
@@ -731,49 +731,7 @@ function AdminLoggedIn({
         </div>
       </div>
       <div className="group-container">
-        <h2>Roster</h2>
-        <span>
-          <input
-            placeholder="employee name"
-            value={addEmployee}
-            onChange={(e) => setAddEmployee(e.target.value)}
-            style={{ marginBottom: "1.3em" }}
-            // disabled={employees.length > 4}
-          />
-          <button
-          // disabled={!addEmployee || employees.length > 4}
-          // onClick={async () => {
-          //   if (addEmployee) {
-          //     const result = await fetch("http://127.0.0.2:3001/addEmployee", {
-          //       method: "post",
-          //       headers: { "Content-Type": "text/plain" },
-          //       body: addEmployee,
-          //     });
-          //     const text = await result.text();
-          //     setAddEmployee("");
-          //   }
-          // }}
-          >
-            Add
-          </button>
-        </span>
-        {/* {employees.length
-          ? employees.map((employee) => (
-              <div>
-                <b>
-                  <i>{employee}</i>
-                </b>
-                <button
-                  onClick={async () => {
-                    setSelected(employee);
-                    setShowModal(true);
-                  }}
-                >
-                  Delete Employee
-                </button>
-              </div>
-            ))
-          : "No employees found"} */}
+        <EmployeeRoster />
         <br />
         <br />
         <button
