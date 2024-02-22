@@ -61,6 +61,5 @@ jobs:
           ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << EOF
              cd server
              npm install
-             sudo systemctl stop nodeapp.service
-             sudo systemctl start nodeapp.service
+             pm2 restart barbershop
           EOF
