@@ -54,7 +54,7 @@ function App() {
   return (
     <>
       {isMaintenance && (
-        <IsMaintenance>Under maintenance! Will be back up by Wednesday morning.</IsMaintenance>
+        <IsMaintenance>Under maintenance! Will be back up by Friday morning.</IsMaintenance>
       )}
 
       <AppView>
