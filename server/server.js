@@ -51,11 +51,20 @@ const s3 = new AWS.S3();
 
 //#region time setup
 
-const getWithOffset = (tz) => {
-  return moment().tz(tz);
+let date = moment().tz(tz);
+let lastRequestTimestamp;
+
+const setPersistentLastRequestTimestamp = (timestamp) => {
+  fs.writeFileSync("./lastTimestamp.txt", timestamp.toString());
 };
 
-const date = getWithOffset(tz); //moment().tz(tz);
+try {
+  lastRequestTimestamp = moment(fs.readFileSync("./lastTimestamp.txt").toString("utf-8"));
+} catch (e) {
+  lastRequestTimestamp = moment().tz(tz);
+  fs.writeFileSync("./lastTimestamp.txt", date.toString());
+}
+
 const day = date.day();
 
 const defaultSched = Object.freeze({
@@ -120,7 +129,7 @@ const defaultHours = makeHours(8, 18);
 //#region time functions
 
 const filterTimesAfterCurrent = (timesArray, tz) => {
-  const currentTime = getWithOffset(tz); //moment().tz(tz);
+  const currentTime = moment().tz(tz); //moment().tz(tz);
 
   return timesArray.filter((timeString) => {
     const timeMoment = moment.tz(
@@ -218,7 +227,6 @@ const getAvailableTimes = (schedule) => {
 
   return { Today, Tomorrow };
 };
-let lastRequestTimestamp = getWithOffset(tz); // moment.tz(tz);
 
 let _day = 0;
 
@@ -227,8 +235,9 @@ const addDay = (days) => {
 };
 
 const checkDayElapsed = (tz) => {
-  const currentTime = getWithOffset(tz); // moment.tz(tz).add(_day, "days");
+  const currentTime = moment().tz(tz);
   const currentDay = currentTime.day();
+
   const daysElapsed = currentTime
     .clone()
     .startOf("day")
@@ -239,6 +248,7 @@ const checkDayElapsed = (tz) => {
     : null;
 
   lastRequestTimestamp = currentTime;
+  setPersistentLastRequestTimestamp(lastRequestTimestamp);
 
   if (daysElapsed === 1) {
     const appts = [...schedule.day1.appts].map((appt) => ({ ...appt, day: "Today" }));
