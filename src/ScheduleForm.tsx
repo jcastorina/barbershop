@@ -467,30 +467,30 @@ const getAlreadyScheduled = () => {
   return null;
 };
 
-const checkIfAlreadyScheduled = (): boolean => {
-  const itemString = localStorage.getItem(localStorageScheduledTime);
-  if (itemString) {
-    const item = JSON.parse(itemString);
-    if (item) {
-      const scheduledTime = parseInt(item);
-      if (typeof scheduledTime === "number") {
-        const currentTime = moment.tz(tz);
-        if (currentTime.valueOf() < scheduledTime) {
-          const currentDay = currentTime.day();
-          const scheduledDay = moment.tz(scheduledTime, tz).day();
-          if (currentDay === scheduledDay) {
-            localStorage.setItem("scheduledDay", "Today");
-          } else {
-            localStorage.setItem("scheduledDay", "Tomorrow");
+const checkIfAlreadyScheduled = async (): Promise<boolean> =>
+  new Promise((resolve) => {
+    const itemString = localStorage.getItem(localStorageScheduledTime);
+    if (itemString) {
+      const item = JSON.parse(itemString);
+      if (item) {
+        const scheduledTime = parseInt(item);
+        if (typeof scheduledTime === "number") {
+          const currentTime = moment.tz(tz);
+          if (currentTime.valueOf() < scheduledTime) {
+            const currentDay = currentTime.day();
+            const scheduledDay = moment.tz(scheduledTime, tz).day();
+            if (currentDay === scheduledDay) {
+              localStorage.setItem("scheduledDay", "Today");
+            } else {
+              localStorage.setItem("scheduledDay", "Tomorrow");
+            }
+            resolve(true);
           }
-          return true;
         }
       }
     }
-  }
-
-  return false;
-};
+    resolve(false);
+  });
 
 const setLocalStorage = (
   day: "day0" | "day1" | null,
@@ -612,6 +612,8 @@ const SuccessfulAppointmentView = ({
   );
 };
 
+//#region extra pages
+
 const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   display: flex;
 
@@ -675,7 +677,7 @@ const StyledSuccessfulAppointmentView = styled(SuccessfulAppointmentView)`
   }
 `;
 
-const ConflictView = ({
+const BaseConflictView = ({
   day,
   time,
   onDone,
@@ -683,7 +685,7 @@ const ConflictView = ({
 }: {
   day: IDays | null;
   time: string | null;
-  onDone: () => void;
+  onDone: (e?: any) => void;
   className?: string;
 }) => {
   return (
@@ -702,7 +704,7 @@ const ConflictView = ({
   );
 };
 
-const StyledConflictView = styled(ConflictView)`
+const ConflictView = styled(BaseConflictView)`
   display: flex;
   flex-direction: column;
   padding: 0em 4em;
@@ -752,7 +754,16 @@ const StyledConflictView = styled(ConflictView)`
   }
 `;
 
-type IMode = "loading" | "form" | "success" | "conflict" | "already" | "loadingAndNew";
+//#endregion extra pages
+
+type IMode = "loading" | "form" | "success" | "conflict" | "already";
+
+const Loading = styled.div`
+  height: 100%;
+  width: 100%;
+  display: grid;
+  place-items: center;
+`;
 
 export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => void }) {
   const [barber] = useState("Mitch");
@@ -768,12 +779,14 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
   const isNotReady = () => !Boolean(phone.length === 10 && name && time);
 
   useEffect(() => {
-    if (!(mode === "loading" || mode === "loadingAndNew")) return;
+    if (mode !== "loading") return;
 
     (async () => {
       try {
         const result = await fetch(`${process.env.REACT_APP_URL}/clientObject`);
+
         const timesObject = (await result.json()) as ITimesObject;
+
         const days = Object.keys(timesObject);
         const todayIdx = days.indexOf("Today");
         const tomorrowIdx = days.indexOf("Tomorrow");
@@ -798,15 +811,14 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
         } else {
           setToken("");
         }
-      } catch (e) {
-      } finally {
-        const is = checkIfAlreadyScheduled();
-        if (is && !(mode === "loadingAndNew")) {
-          setMode("already");
-        } else {
-          setMode("form");
-        }
-      }
+        void checkIfAlreadyScheduled().then((isAlreadyScheduled) => {
+          if (isAlreadyScheduled) {
+            setMode("already");
+          } else {
+            setMode("form");
+          }
+        });
+      } catch (e) {}
     })();
   }, [mode]);
 
@@ -819,12 +831,6 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
     }
   }, [times, day, days]);
 
-  useEffect(() => {
-    if (mode === "loading") {
-      setMode("already");
-    } else {
-    }
-  }, [mode]);
   return (
     <Column>
       {mode === "success" && (
@@ -836,11 +842,11 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
         />
       )}
       {mode === "conflict" && (
-        <StyledConflictView
+        <ConflictView
           day={day}
           time={time}
           onDone={() => {
-            setMode("loadingAndNew");
+            setMode("loading");
           }}
         />
       )}
@@ -855,7 +861,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
           }}
         />
       )}
-      {mode === "loading" || (mode === "loadingAndNew" && <>Loading...</>)}
+      {mode === "loading" && <Loading>Loading...</Loading>}
       {mode === "form" && (
         <FormWrapper>
           <StartColumn>
@@ -869,14 +875,12 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
             <StyledConfirm
               disabled={isNotReady()}
               onClick={async () => {
-                console.log(day, "day");
                 await fetch(`${process.env.REACT_APP_URL}/newAppointment`, {
                   method: "post",
                   body: JSON.stringify({ day, time, barber, name, phone, token }),
                 })
                   .then((e) => {
                     const status = e.status;
-                    console.log(status, "status ");
                     if (status === 409) {
                       setMode("conflict");
                     } else if (e.ok) {

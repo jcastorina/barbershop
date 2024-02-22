@@ -277,7 +277,6 @@ async function uploadFile(Bucket, Body, Key = Filename) {
         reject("error");
         console.log(err, err?.stack);
       } else {
-        console.log("success");
         resolve("success");
       }
     });
@@ -386,7 +385,7 @@ app.post("/newAppointment", async (req, res) => {
   ) {
     return res.status(400);
   }
-  console.log(day, schedule[day]);
+
   const existingAppts = schedule[day].appts;
 
   const hasExisting = existingAppts.filter((appt) => appt.time === time).length;
