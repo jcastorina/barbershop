@@ -27,3 +27,4 @@ tasks.txt
 .secrets
 event.js
 index.js
+lastTimestamp.txt
