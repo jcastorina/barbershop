@@ -12,7 +12,8 @@ declare global {
     token: string;
   };
 
-  type IDays = "day0" | "day1";
+  type IDay = "day0" | "day1";
+  type IDays = ["day0", "day1"];
 
   type IMode = "loading" | "form" | "success" | "conflict" | "already";
 

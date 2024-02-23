@@ -1,7 +1,7 @@
 //#region imports
 
 import moment from "moment-timezone";
-import { useState, useEffect, useRef, ReactComponentElement } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled, { IStyledComponent } from "styled-components";
 
 import { colors } from "./utilities";
@@ -314,9 +314,9 @@ const BaseDays = ({
   setDay,
   className,
 }: {
-  day: IDays | null;
-  days: IDays[] | null;
-  setDay: (days: IDays) => void;
+  day: IDay | null;
+  days: IDays;
+  setDay: (days: IDay) => void;
   className?: string;
 }) => {
   if (!day || !days) {
@@ -328,7 +328,7 @@ const BaseDays = ({
       <div className={"select-border-wrapper"}>
         <select
           onChange={(e) => {
-            setDay(e.target.value as IDays);
+            setDay(e.target.value as IDay);
           }}
           value={day}
         >
@@ -396,13 +396,13 @@ const BaseTimes = ({
   time: string | null;
   times: string[] | null;
   setTime: (time: string) => void;
-  day: IDays;
+  day: IDay;
   barber: string | null;
   NoAvailabilityComponent: IStyledComponent<
     "web",
     FastOmit<
       {
-        day: IDays | null;
+        day: IDay | null;
         barber: string | null;
         className?: string | undefined;
       },
@@ -536,7 +536,7 @@ const BaseNoAvailability = ({
   barber,
   className,
 }: {
-  day: IDays | null;
+  day: IDay | null;
   barber: string | null;
   className?: string;
 }) => (
@@ -722,7 +722,7 @@ const BaseConflictView = ({
   onDone,
   className,
 }: {
-  day: IDays | null;
+  day: IDay | null;
   time: string | null;
   onDone: (e?: any) => void;
   className?: string;
@@ -837,7 +837,7 @@ const checkIfAlreadyScheduled = async (): Promise<boolean> =>
     resolve(false);
   });
 
-const setLocalStorage = (day: IDays | null, time: string | null, token: string | null) => {
+const setLocalStorage = (day: IDay | null, time: string | null, token: string | null) => {
   let time1 = moment(time, "h:mm A");
   if (day === "day1") {
     time1.add(1, "day");
@@ -860,8 +860,8 @@ const setLocalStorage = (day: IDays | null, time: string | null, token: string |
 export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => void }) {
   const [barber, setBarber] = useState<string | null>(null);
   const [barbers, setBarbers] = useState<string[] | null>(null);
-  const [day, setDay] = useState<IDays>("day1");
-  const [days, setDays] = useState<IDays[]>(["day0", "day1"]);
+  const [day, setDay] = useState<IDay>("day1");
+  const days: IDays = ["day0", "day1"];
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -908,7 +908,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
         });
       } catch (e) {}
     })();
-  }, [mode]);
+  }, [mode, day]);
 
   useEffect(() => {
     if (clientObject && barber) {
