@@ -61,7 +61,9 @@ export const Content = styled.div`
   background-color: white;
   border-radius: 6px;
   box-sizing: content-box;
-  height: 30em;
+  height: 35em;
+  position: absolute;
+  margin-top: 3em;
 
   padding: 3em 0em;
 

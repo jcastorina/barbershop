@@ -113,7 +113,7 @@ let schedule = {
       // { name: "jsadgooe", phone: 2234659990, time: "1:30 PM", barber: "mitch" },
     ],
   },
-  day2: {},
+  day2: { hours: null, appts: [] },
 };
 
 const makeHours = (start, hours) => {
@@ -171,75 +171,109 @@ const filterArray = (array1, array2) => {
   }
   return res;
 };
-const removeTime = (times = [], time) => {
-  const idx = times.indexOf(time);
-  if (idx >= 0) {
-    if (times.length === 1) {
-      return [];
-    } else if (times.length === 2) {
-      if (idx === 0) {
-        return [times[1]];
-      } else {
-        return [times[0]];
-      }
-    } else if (idx === times.length - 1) {
-      return [...times.slice(0, times.length - 1)];
-    } else if (idx === 0) {
-      return [...times.slice(1, times.length)];
-    } else {
-      return [...times.slice(0, idx), ...times.slice(idx + 1, times.length)];
-    }
-  }
-  return [...times];
-};
+// const removeTime = (times = [], time) => {
+//   const idx = times.indexOf(time);
+//   if (idx >= 0) {
+//     if (times.length === 1) {
+//       return [];
+//     } else if (times.length === 2) {
+//       if (idx === 0) {
+//         return [times[1]];
+//       } else {
+//         return [times[0]];
+//       }
+//     } else if (idx === times.length - 1) {
+//       return [...times.slice(0, times.length - 1)];
+//     } else if (idx === 0) {
+//       return [...times.slice(1, times.length)];
+//     } else {
+//       return [...times.slice(0, idx), ...times.slice(idx + 1, times.length)];
+//     }
+//   }
+//   return [...times];
+// };
 
 const getAvailableTimes = (schedule) => {
   const todayHoursRange = schedule.day0.hours;
   const tomorrowHoursRange = schedule.day1.hours;
 
-  const today = schedule.day0.appts;
-  const tomorrow = schedule.day1.appts;
+  const todayAppts = schedule.day0.appts;
+  const tomorrowAppts = schedule.day1.appts;
+  let employeeTimes = {};
 
-  let Today = null;
-  let Tomorrow = null;
+  let todayHoursArray = null;
+  let tomorrowHoursArray = null;
 
   if (todayHoursRange) {
-    Today = makeHours(todayHoursRange[0], todayHoursRange[1] - todayHoursRange[0]);
+    todayHoursArray = makeHours(todayHoursRange[0], todayHoursRange[1] - todayHoursRange[0]);
   }
 
   if (tomorrowHoursRange) {
-    Tomorrow = makeHours(tomorrowHoursRange[0], tomorrowHoursRange[1] - tomorrowHoursRange[0]);
-  }
-  if (Today) {
-    Today = filterTimesAfterCurrent(Today, tz);
-    if (today.length) {
-      Today = filterArray(
-        Today,
-        today.map((appt) => appt.time)
-      );
-    }
-    if (todayHoursRange && todayHoursRange[1] >= 15) {
-      const removedArray = removeTime(Today, "12:30 PM");
-      if (removedArray) {
-        Today = removedArray;
-      }
-    }
-  }
-
-  if (Tomorrow && tomorrow.length) {
-    Tomorrow = filterArray(
-      Tomorrow,
-      tomorrow.map((appt) => appt.time)
+    tomorrowHoursArray = makeHours(
+      tomorrowHoursRange[0],
+      tomorrowHoursRange[1] - tomorrowHoursRange[0]
     );
   }
-  if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
-    const removedArray = removeTime(Tomorrow, "12:30 PM");
-    if (removedArray) {
-      Tomorrow = removedArray;
-    }
+  const getEmployeeAvailability = (employee, appts, hoursArray, day = "today") => {
+    const myHours = appts.filter((appt) => appt.barber === employee);
+
+    const hoursRemaining = day === "today" ? filterTimesAfterCurrent(hoursArray, tz) : hoursArray;
+    const employeeAvailability = filterArray(
+      hoursRemaining,
+      myHours.map((appt) => appt.time)
+    );
+    return [...employeeAvailability];
+  };
+  if (todayHoursArray) {
+    employees.forEach((employee) => {
+      employeeTimes[employee] = {
+        day0: getEmployeeAvailability(employee, todayAppts, todayHoursArray, "today"),
+        day1: null,
+      };
+    });
   }
 
-  return { Today, Tomorrow };
+  if (tomorrowHoursArray) {
+    employees.forEach((employee) => {
+      employeeTimes[employee]["day1"] = getEmployeeAvailability(
+        employee,
+        tomorrowAppts,
+        tomorrowHoursArray,
+        "tomorrow"
+      );
+    });
+  }
+
+  // Today = filterTimesAfterCurrent(Today, tz);
+  // if (today.length) {
+  //   Today = filterArray(
+  //     Today,
+  //     today.map((appt) => appt.time)
+  //   );
+  // }
+  // if (todayHoursRange && todayHoursRange[1] >= 15) {
+  //   const removedArray = removeTime(Today, "12:30 PM");
+  //   if (removedArray) {
+  //     Today = removedArray;
+  //   }
+  // }
+
+  // if (Tomorrow && tomorrow.length) {
+  //   Tomorrow = filterArray(
+  //     Tomorrow,
+  //     tomorrow.map((appt) => appt.time)
+  //   );
+  // }
+  // if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
+  //   const removedArray = removeTime(Tomorrow, "12:30 PM");
+  //   if (removedArray) {
+  //     Tomorrow = removedArray;
+  //   }
+  // }
+
+  //return { Today, Tomorrow };
+
+  return employeeTimes;
 };
 
 let _day = 0;
@@ -341,7 +375,7 @@ app.get("/clientObject", (req, res) => {
   const timesObject = getAvailableTimes(schedule);
   const token = uuid();
 
-  res.write(JSON.stringify({ ...timesObject, token }));
+  res.write(JSON.stringify({ barbers: { ...timesObject }, token }));
   return res.end();
 });
 
@@ -390,14 +424,7 @@ app.post("/adminUpdateSchedule", (req, res) => {
 
 app.post("/newAppointment", async (req, res) => {
   const result = JSON.parse(req.body);
-
-  const { day: $day, time, barber, name, phone, token } = result;
-  let day;
-  if ($day === "Today") {
-    day = "day0";
-  } else if ($day === "Tomorrow") {
-    day = "day1";
-  }
+  const { day, time, barber, name, phone, token } = result;
 
   if (
     typeof day !== "string" ||
@@ -412,7 +439,9 @@ app.post("/newAppointment", async (req, res) => {
 
   const existingAppts = schedule[day].appts;
 
-  const hasExisting = existingAppts.filter((appt) => appt.time === time).length;
+  const hasExisting = existingAppts.filter(
+    (appt) => appt.barber === barber && appt.time === time
+  ).length;
 
   if (hasExisting) {
     res.status(409);
@@ -459,7 +488,7 @@ app.post("/loginAdmin", (req, res) => {
   return res.end();
 });
 
-app.post("/deleteEmployee", (req, res) => {
+app.post("/deleteEmployee", async (req, res) => {
   if (typeof req.body === "string") {
     const employee = req.body;
     const idx = employees.indexOf(employee);
@@ -471,6 +500,17 @@ app.post("/deleteEmployee", (req, res) => {
       employees = [...head, ...tail];
     }
     setPersistentEmployees(employees);
+
+    Object.keys(schedule).forEach((day) => {
+      schedule[day].appts = [
+        ...schedule[day].appts.filter((record) => {
+          console.log(record);
+          return record.barber !== employee;
+        }),
+      ];
+    });
+
+    await uploadFile(Bucket, schedule);
     res.status(200);
   } else {
     res.status(401);
