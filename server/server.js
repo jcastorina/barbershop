@@ -59,21 +59,19 @@ const setPersistentLastRequestTimestamp = (timestamp) => {
 };
 
 try {
-  lastRequestTimestamp = moment(fs.readFileSync("./lastTimestamp.txt").toString("utf-8"));
+  lastRequestTimestamp = moment(fs.readFileSync("./lastTimestamp.txt").toString()).tz(tz);
 } catch (e) {
   lastRequestTimestamp = moment().tz(tz);
   fs.writeFileSync("./lastTimestamp.txt", date.toString());
 }
 
 let employees;
-console.log("starting up after employees");
 const setPersistentEmployees = (employees) => {
   fs.writeFileSync("./employees.txt", JSON.stringify(employees));
 };
 
 try {
   employees = JSON.parse(fs.readFileSync("./employees.txt").toString());
-  console.log("try block", employees);
 } catch (e) {
   employees = ["Mitch"];
   fs.writeFileSync("./employees.txt", JSON.stringify(employees));
@@ -228,6 +226,13 @@ const getAvailableTimes = (schedule) => {
     employees.forEach((employee) => {
       employeeTimes[employee] = {
         day0: getEmployeeAvailability(employee, todayAppts, todayHoursArray, "today"),
+        day1: null,
+      };
+    });
+  } else {
+    employees.forEach((employee) => {
+      employeeTimes[employee] = {
+        day0: null,
         day1: null,
       };
     });
@@ -504,7 +509,6 @@ app.post("/deleteEmployee", async (req, res) => {
     Object.keys(schedule).forEach((day) => {
       schedule[day].appts = [
         ...schedule[day].appts.filter((record) => {
-          console.log(record);
           return record.barber !== employee;
         }),
       ];
