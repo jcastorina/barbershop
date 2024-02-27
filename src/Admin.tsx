@@ -246,11 +246,13 @@ const Appointment = ({
         <span>Name: </span>
         <span>Phone: </span>
         <span>Time: </span>
+        <span>Barber: </span>
       </div>
       <div className={"column item"}>
         <div>{appointment.name}</div>
         <div>{formatPhoneNumber(appointment.phone)}</div>
         <div>{appointment.time}</div>
+        <div>{appointment.barber}</div>
       </div>
     </div>
   );
