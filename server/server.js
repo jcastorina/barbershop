@@ -419,9 +419,9 @@ app.post("/adminUpdateSchedule", (req, res) => {
   checkDayElapsed(tz);
   const result = JSON.parse(req.body);
 
-  const { Today, Tomorrow } = result;
-  schedule.day0.hours = Today.hours;
-  schedule.day1.hours = Tomorrow.hours;
+  const { Today: day0, Tomorrow: day1 } = result;
+  schedule.day0.hours = day0.hours;
+  schedule.day1.hours = day1.hours;
 
   res.status(200);
   return res.end();
