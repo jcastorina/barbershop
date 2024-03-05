@@ -81,6 +81,8 @@ export const StyledAdminLoginView = styled(AdminLoginView)`
   align-items: center;
   justify-content: center;
 
+  background-color: white;
+
   height: 100vh;
   width: 100vw;
 
@@ -123,28 +125,7 @@ function Modal({
     <div className={className}>
       <span>Delete {employee}?</span>
       <div>
-        <button
-        // onClick={async () => {
-        //   try {
-        //     const result = await fetch("http://127.0.0.1:3001/deleteEmployee", {
-        //       method: "post",
-        //       headers: { "Content-Type": "text/plain" },
-        //       body: employee,
-        //     });
-        //     const text = await result.text();
-        //     console.log(text, "running set need supdate");
-        //     // setNeedsUpdate((u) => !u);
-        //     console.log(text);
-        //   } catch (e) {
-        //     console.log("No employee found!");
-        //   } finally {
-        //     console.log("trying to update in finally block");
-        //     setShowModal(false);
-        //   }
-        // }}
-        >
-          Yes
-        </button>
+        <button>Yes</button>
 
         <button
           onClick={async () => {
@@ -461,24 +442,14 @@ type ISchedule = Record<IDays, IDaySchedule>;
 function AdminLoggedIn({
   setAdminLoggedIn,
   setAdminLoginView,
-  // setNeedsUpdate,
   className,
 }: {
   setAdminLoggedIn: (u: boolean) => void;
   setAdminLoginView: (u: boolean) => void;
-  // employees: string[];
-  // setNeedsUpdate: (c: (u: boolean) => boolean) => void;
   className?: string;
 }) {
   const [showModal, setShowModal] = useState(false);
   const [selected] = useState("");
-
-  // const [employees, setEmployees] = useState(["Mitch"]);
-
-  // if i type in a closing hour after 6pm, it changes to 6pm onBlur
-  // if i type in a closing hour before the opening hour, it changes to the opening hour onblur
-  // when i click closed, it simply disables the inputs
-  // do a validation check for the isDisabled flag that asserts these rules
 
   const [todayOpen, setTodayOpen] = useState<number>(8);
   const [todayClosed, setTodayClosed] = useState<number>(18);
@@ -523,13 +494,6 @@ function AdminLoggedIn({
 
   useEffect(() => {
     (async () => {
-      // const result = await fetch("http://127.0.0.1:3001/employees");
-      // const text = await result.text();
-      // const employees = JSON.parse(text);
-      // if (typeof employees === "object") {
-      //   setEmployees(employees);
-      // }
-
       const adminResult = await fetch(`${process.env.REACT_APP_URL}/adminObject`);
       const adminObjectJSON = await adminResult.text();
       const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
@@ -705,9 +669,6 @@ function AdminLoggedIn({
             <div>
               <button
                 onClick={() => {
-                  // console.log("clicked");
-                  // const today = await getTodayAppts();
-                  // setTodayAppts(today);
                   setIsTodayAppointmentView(true);
                 }}
               >
@@ -721,8 +682,6 @@ function AdminLoggedIn({
             <div>
               <button
                 onClick={async () => {
-                  // const tomorrow = await getTomorrowAppts();
-                  // setTomorrowAppts(tomorrow);
                   setIsTomorrowAppointmentView(true);
                 }}
               >
@@ -754,13 +713,11 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
   height: 100vh;
   width: 100vw;
   display: flex;
-  /* flex-direction: row;
-  align-items: center;
-  justify-content: center; */
+
+  background-color: white;
 
   h2 {
     width: 10em;
-    /* border: 1px solid pink; */
   }
 
   .group-container {
@@ -771,28 +728,17 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     margin: 0em 3em;
     height: 30em;
     width: 18em;
-
-    /* border: 1px solid green; */
   }
 
   .hours-container {
     display: flex;
     flex-direction: column;
-    //  align-items: center;
     justify-content: flex-start;
-    // margin: 3em;
-    // height: 20em;
     width: 18em;
 
-    /* border: 1px solid red; */
-
     div {
-      /* margin-left: 2em;
-      margin-right: 1em; */
-      //width: 12em;
       display: flex;
       flex-direction: row;
-
       justify-content: space-between;
 
       input {
@@ -802,7 +748,6 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
       button {
         width: 6.5em;
         height: 2.5em;
-
         margin: 0;
       }
     }

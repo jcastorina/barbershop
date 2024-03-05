@@ -4,9 +4,9 @@ body {
     "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* background-color: #c8c7b5; */
-  /* background-color: white; */
-  height: 100vh;
+  background-image: url("background-image.jpg");
+  background-size: cover;
+  background-attachment: fixed;
   box-sizing: border-box;
 }
 

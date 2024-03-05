@@ -25,6 +25,7 @@ const Column = styled.div`
   flex-direction: column;
   height: 100%;
   width: 100%;
+  margin-top: -12px;
 `;
 
 const FormWrapper = styled.div`
@@ -35,7 +36,7 @@ const FormWrapper = styled.div`
 `;
 
 const StyledLabel = styled.label`
-  margin-bottom: 0.2em;
+  margin-bottom: 0.4em;
 `;
 
 const StartColumn = styled.div<{ marginTop?: number }>`
@@ -74,7 +75,7 @@ const BaseName = ({
 
   return (
     <div className={className}>
-      <StyledLabel>Name</StyledLabel>
+      <StyledLabel>Your Name</StyledLabel>
       <input
         ref={nameRef}
         placeholder={"e.g. John Smith"}
@@ -141,7 +142,7 @@ const BasePhoneNumber = ({
 
   return (
     <div className={className}>
-      <StyledLabel>Phone Number</StyledLabel>
+      <StyledLabel>Your Phone Number</StyledLabel>
       <div className={"phone-row"}>
         <input
           value={areaCode}
@@ -246,22 +247,21 @@ const BaseBarbers = ({
   setBarber: React.Dispatch<React.SetStateAction<string | null>>;
   className?: string;
 }) => {
+  console.log(barber, "barber");
   return (
     <div className={className}>
       {barber && barbers && barbers.length && (
         <>
-          <StyledLabel>Barber</StyledLabel>
-          <div className={"select-border-wrapper"}>
-            <select
-              onChange={(e) => {
-                setBarber(e.target.value);
-              }}
-              value={barber}
-            >
-              {barbers.map((barbers) => (
-                <option>{barbers}</option>
-              ))}
-            </select>
+          <StyledLabel>Pick Your Barber</StyledLabel>
+          <div className={"barber-button-container"}>
+            {barbers.map(($barber) => (
+              <div
+                onClick={() => setBarber($barber)}
+                className={`${$barber === barber && "selected-barber"} barber-button`}
+              >
+                {$barber}
+              </div>
+            ))}
           </div>
         </>
       )}
@@ -271,40 +271,37 @@ const BaseBarbers = ({
 
 const Barbers = styled(BaseBarbers)`
   margin-left: 1em;
-  height: 5.5em;
   display: flex;
   flex-direction: column;
+  margin-bottom: 0.3em;
 
-  .select-border-wrapper {
+  .barber-button-container {
+    width: 19em;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-left: -0.3em;
+  }
+
+  .barber-button {
+    height: 3em;
+    min-width: 5.8em;
+    max-width: 5.8em;
+    margin: 0.2em;
+    border-radius: 6px;
     display: grid;
     place-items: center;
-    height: 3.4em;
-    width: 12.4em;
+    box-sizing: border-box;
   }
 
-  select {
-    overflow: scroll;
-    box-sizing: content-box;
-    width: 12em;
-    padding: 1.2em;
-    background-color: white;
-    border-radius: 2px;
+  .selected-barber {
+    border: 2px solid ${colors.coolBlue};
+    font-weight: 500;
+  }
+
+  .barber-button:hover {
     cursor: pointer;
-
-    &:focus {
-      border: 2px solid black;
-    }
-
-    &:active {
-      border: 2px solid black;
-    }
-  }
-
-  option {
-    overflow: scroll;
-    width: 12em;
-    padding: 5em;
-    margin: 5em;
+    text-decoration: underline;
   }
 `;
 
@@ -324,7 +321,7 @@ const BaseDays = ({
   }
   return (
     <div className={className}>
-      <StyledLabel>Day</StyledLabel>
+      <StyledLabel>Pick A Day</StyledLabel>
       <div className={"select-border-wrapper"}>
         <select
           onChange={(e) => {
@@ -343,8 +340,6 @@ const BaseDays = ({
 
 const Days = styled(BaseDays)`
   margin-left: 1em;
-  //margin-bottom: 1em;
-
   display: flex;
   flex-direction: column;
   height: 5.5em;
@@ -359,14 +354,10 @@ const Days = styled(BaseDays)`
   select {
     overflow: scroll;
     box-sizing: content-box;
-
     width: 12em;
     padding: 1.2em;
-
     background-color: white;
-
     border-radius: 2px;
-
     cursor: pointer;
 
     &:focus {
@@ -415,7 +406,7 @@ const BaseTimes = ({
     <div className={className}>
       {time && times && times.length && (
         <>
-          <StyledLabel>Time</StyledLabel>
+          <StyledLabel>Pick A Time</StyledLabel>
           <div className={"select-border-wrapper"}>
             <select
               onChange={(e) => {

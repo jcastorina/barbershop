@@ -17,25 +17,16 @@ export const IsMaintenance = styled.div`
 `;
 
 export const AppView = styled.div`
-  box-sizing: content-box;
-
-  overflow: scroll;
-
-  height: 100vh;
-
-  background-image: url("background-image.jpg");
-  background-repeat: repeat;
-
+  overflow-y: scroll;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  // justify-content: flex-start;
-  /* align-items: center; */
+  justify-content: space-between;
 `;
 
 export const StyledLogo = styled.img`
   padding: 1em;
   align-self: flex-start;
-  // background-color: green;
   @media (max-height: ${mediaBreak}) {
     width: 6em;
     height: 6em;
@@ -47,7 +38,6 @@ export const StyledLogo = styled.img`
 `;
 
 export const Header = styled.div`
-  // margin-bottom: 2em;
   align-self: flex-start;
 `;
 
@@ -55,57 +45,35 @@ export const Content = styled.div`
   align-self: center;
   display: flex;
   flex-direction: column;
-
   width: 25em;
   align-items: center;
   background-color: white;
   border-radius: 6px;
   box-sizing: content-box;
-  height: 35em;
-  position: absolute;
-  margin-top: 3em;
-
+  margin-top: -3em;
+  margin-bottom: 3em;
   padding: 3em 0em;
-
-  /* @media (max-height: ${mediaBreak}) {
-    padding: 0em 0em;
-  }
-  @media (min-height: ${mediaBreak}) {
-    padding: 3em 0em;
-  } */
 `;
 
 export const Footer = styled.div`
-  position: fixed;
   background-color: ${colors.floor};
   color: white;
-  bottom: 0px;
   width: 100%;
   height: 3em;
   display: grid;
   place-items: center;
-
   font-style: italic;
-  //  min-width: 32em;
 `;
 
 export const Anchor = styled.a`
   padding: 1.5em 2.4em;
-
   background-color: ${colors.coolBlue};
-
   font-size: 1em;
-
   color: white;
-
   border: none;
-
   margin: 0.5em 1em;
-
   text-decoration: none;
-
   border-radius: 2px;
-
   display: grid;
   place-items: center;
 
@@ -136,7 +104,6 @@ export const ButtonContainer = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-
   padding-top: 2em;
 
   a {
