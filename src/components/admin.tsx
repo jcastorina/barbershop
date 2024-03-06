@@ -24,11 +24,9 @@ export const EmployeeRoster = () => {
     if (!isLoading) return;
     (async () => {
       const url = `${process.env.REACT_APP_URL}/employees`;
-      console.log(url);
       const result = await fetch(url);
       const employees = await result.json();
 
-      //   const employees = JSON.parse(text);
       if (typeof employees === "object") {
         setEmployees(employees);
       }

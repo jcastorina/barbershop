@@ -10,6 +10,18 @@ body {
   box-sizing: border-box;
 }
 
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: inherit; /* Use the same background image as the html element */
+  filter: brightness(50%); /* Adjust brightness to darken the image */
+  z-index: -1; /* Ensure content on body is not affected */
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
