@@ -86,7 +86,7 @@ const defaultSched = Object.freeze({
   3: [8, 18],
   4: [8, 18],
   5: [8, 18],
-  6: [8, 15],
+  6: [8, 14],
 });
 
 let schedule = {
