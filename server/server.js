@@ -37,8 +37,8 @@ if (process.env.DEVELOPMENT === "true") {
 } else {
   Filename = process.env.AWS_PROD_SCHEDULE_FILE;
   const httpsOptions = {
-    cert: fs.readFileSync(path.join(__dirname, "./api.jeffersonstreet.com", "fullchain.pem")),
-    key: fs.readFileSync(path.join(__dirname, "./api.jeffersonstreet.com", "privkey.pem")),
+    cert: fs.readFileSync(path.join(__dirname, ".", "fullchain.pem")),
+    key: fs.readFileSync(path.join(__dirname, ".", "privkey.pem")),
   };
   https.createServer(httpsOptions, app).listen(PORT, function () {
     console.log(`Express server listening on port ${PORT}`);
