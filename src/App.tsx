@@ -72,7 +72,7 @@ function App() {
                   setShowForm(true);
                 }}
               >
-                MAKE AN APPOINTMENT
+                BOOK AN APPOINTMENT
               </Anchor>
               <hr />
               <Anchor

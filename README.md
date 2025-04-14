@@ -8,6 +8,6 @@ npm run server
 
 # and this in terminal 2:
 
-npm run start
+npm run dev
 
 # test
