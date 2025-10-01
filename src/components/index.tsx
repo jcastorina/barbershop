@@ -125,31 +125,31 @@ const Prices = ({ handleClick, className }: { handleClick: () => void; className
       <table className={"table"}>
         <tr className={"table-row"}>
           <td className={"label"}>HAIRCUT</td>
-          <td className={"price"}>$21</td>
+          <td className={"price"}>$24</td>
         </tr>
         <tr className={"table-row"}>
           <td className={"label"}>KIDS</td>
-          <td className={"price"}>$19</td>
+          <td className={"price"}>$22</td>
         </tr>
         <tr className={"table-row"}>
           <td className={"label"}>SENIOR</td>
-          <td className={"price"}>$19</td>
+          <td className={"price"}>$20</td>
         </tr>
         <tr className={"table-row"}>
           <td className={"label"}>HEAD SHAVE</td>
-          <td className={"price"}>$25</td>
+          <td className={"price"}>$28</td>
         </tr>
         <tr className={"table-row"}>
           <td className={"label"}>FACE SHAVE</td>
-          <td className={"price"}>$29</td>
+          <td className={"price"}>$32</td>
         </tr>
         <tr className={"table-row"}>
           <td className={"label"}>BEARD TRIM</td>
-          <td className={"price"}>$13</td>
+          <td className={"price"}>$16</td>
         </tr>
         <tr className={"table-row"}>
           <td className={"label"}>HAIR & BEARD</td>
-          <td className={"price"}>$28</td>
+          <td className={"price"}>$31</td>
         </tr>
       </table>
       <div className={"note-items"}>
