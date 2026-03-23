@@ -1,6 +1,73 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import moment from "moment-timezone";
 import { EmployeeRoster } from "./components/admin";
+
+const tz = process.env.TZ || "America/Chicago";
+
+const getDayOffset = (day: IDay) => parseInt(day.replace("day", ""), 10);
+
+const sortDays = (days: IDays) => [...days].sort((a, b) => getDayOffset(a) - getDayOffset(b));
+
+const getDayLabel = (day: IDay) => {
+  const offset = getDayOffset(day);
+  const dateLabel = moment().tz(tz).add(offset, "days").format("M/D");
+
+  if (offset === 0) {
+    return `Today - ${dateLabel}`;
+  }
+
+  if (offset === 1) {
+    return `Tomorrow - ${dateLabel}`;
+  }
+
+  return `${moment().tz(tz).add(offset, "days").format("dddd")} - ${dateLabel}`;
+};
+
+type IDayConfig = {
+  open: number;
+  closed: number;
+  isClosed: boolean;
+};
+
+async function submitLogin(password: string) {
+  return await fetch(`${process.env.REACT_APP_URL}/loginAdmin`, {
+    method: "post",
+    headers: { "Content-Type": "text/plain" },
+    body: password,
+  });
+}
+
+const getAdminSchedule = async () => {
+  try {
+    const result = await fetch(`${process.env.REACT_APP_URL}/adminObject`);
+    const string = await result.text();
+    return JSON.parse(string) as ISchedule;
+  } catch (e) {
+    return {} as ISchedule;
+  }
+};
+
+const formatPhoneNumber = (string: string) => {
+  if (string.length === 10) {
+    return `${string.slice(0, 3)}-${string.slice(3, 6)}-${string.slice(6, 10)}`;
+  }
+};
+
+const sortAppointments = (appts: IAppointmentRecord[]) =>
+  [...appts].sort((a, b) => {
+    const [aMoment, bMoment] = [a.time, b.time].map((time) => {
+      const [timePart, period] = time.split(" ");
+      const [hours, minutes] = timePart.split(":").map(Number);
+      let normalizedHours = hours % 12;
+      if (period === "PM") {
+        normalizedHours += 12;
+      }
+      return normalizedHours * 60 + minutes;
+    });
+
+    return aMoment - bMoment;
+  });
 
 function AdminLoginView({
   password,
@@ -15,20 +82,12 @@ function AdminLoginView({
   setAdminLoginView: (e: any) => void;
   className?: string;
 }) {
-  async function submitLogin() {
-    return await fetch(`${process.env.REACT_APP_URL}/loginAdmin`, {
-      method: "post",
-      headers: { "Content-Type": "text/plain" },
-      body: password,
-    });
-  }
-
   return (
     <div
       className={className}
       onKeyDown={async (e) => {
         if (e.key === "Enter") {
-          const response = await submitLogin();
+          const response = await submitLogin(password);
 
           if (response.ok) {
             setAdminLoggedIn(true);
@@ -49,7 +108,7 @@ function AdminLoginView({
           <button
             className="login-button"
             onClick={async () => {
-              const response = await submitLogin();
+              const response = await submitLogin(password);
 
               if (response.ok) {
                 setAdminLoggedIn(true);
@@ -180,39 +239,11 @@ const SaveButton = styled.button<{ isCheckForm: boolean }>`
   height: 3em;
   width: 9em;
   align-self: center;
-  margin-top: 8em;
+  margin-top: 2em;
   border: 1px solid grey;
   border-radius: 2px;
   background-color: ${(props) => (props.isCheckForm ? "default;" : "#5BF563;")};
 `;
-
-const getTodayAppts = async () => {
-  try {
-    const result = await fetch(`${process.env.REACT_APP_URL}/adminTodayAppts`);
-    const string = await result.text();
-    const todayAppts = JSON.parse(string);
-    return todayAppts;
-  } catch (e) {
-    return [];
-  }
-};
-
-const getTomorrowAppts = async () => {
-  try {
-    const result = await fetch(`${process.env.REACT_APP_URL}/adminTomorrowAppts`);
-    const string = await result.text();
-    const todayAppts = JSON.parse(string);
-    return todayAppts;
-  } catch (e) {
-    return [];
-  }
-};
-
-const formatPhoneNumber = (string: string) => {
-  if (string.length === 10) {
-    return `${string.slice(0, 3)}-${string.slice(3, 6)}-${string.slice(6, 10)}`;
-  }
-};
 
 const Appointment = ({
   appointment,
@@ -316,30 +347,25 @@ const StyledSelector = styled(Selector)`
 `;
 
 const AppointmentView = ({
-  day,
+  dayKey,
   setShow,
   className,
 }: {
-  day: "Today" | "Tomorrow";
+  dayKey: IDay;
   setShow: (show: boolean) => void;
   className?: string;
 }) => {
   const [appts, setAppts] = useState<IAppointmentRecord[] | [] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (day === "Today") {
-      getTodayAppts()
-        .then((appts) => setAppts(appts))
-        .finally(() => setIsLoading(false));
-    } else if (day === "Tomorrow") {
-      getTomorrowAppts()
-        .then((appts) => setAppts(appts))
-        .finally(() => setIsLoading(false));
-    }
-  }, [day]);
-
-  const [index, setIndex] = useState(0);
+    getAdminSchedule()
+      .then((schedule) => {
+        setAppts(sortAppointments(schedule[dayKey]?.appts ?? []));
+      })
+      .finally(() => setIsLoading(false));
+  }, [dayKey]);
 
   const canBack = appts?.length && index > 0 ? true : false;
   const canForward = appts?.length && index < appts.length - 1 ? true : false;
@@ -351,7 +377,7 @@ const AppointmentView = ({
   }
   return (
     <div className={className}>
-      <h2>{day}'s&nbsp;Appointments</h2>
+      <h2>{getDayLabel(dayKey)}&apos;s&nbsp;Appointments</h2>
       {appts && appts.length > 0 && (
         <>
           <StyledAppointment appointment={appts[index]} />
@@ -421,24 +447,6 @@ const StyledAppointmentView = styled(AppointmentView)`
   }
 `;
 
-type IDays = "day0" | "day1" | "day2";
-
-type IAppointmentRecord = {
-  name: string;
-  time: string;
-  barber: string;
-  day: string;
-  phone: string;
-  token: string;
-};
-
-type IDaySchedule = {
-  hours: number[] | null;
-  appts: IAppointmentRecord[] | never[];
-};
-
-type ISchedule = Record<IDays, IDaySchedule>;
-
 function AdminLoggedIn({
   setAdminLoggedIn,
   setAdminLoginView,
@@ -450,92 +458,93 @@ function AdminLoggedIn({
 }) {
   const [showModal, setShowModal] = useState(false);
   const [selected] = useState("");
-
-  const [todayOpen, setTodayOpen] = useState<number>(8);
-  const [todayClosed, setTodayClosed] = useState<number>(18);
-  const [tomorrowOpen, setTomorrowOpen] = useState<number>(8);
-  const [tomorrowClosed, setTomorrowClosed] = useState<number>(18);
-  const [isTodayClosed, setIsTodayClosed] = useState(false);
-  const [isTomorrowClosed, setIsTomorrowClosed] = useState(false);
-
-  const handleTodayOpenBlur = () => {
-    if (todayOpen && todayOpen < 8) {
-      setTodayOpen(8);
-    }
-    if (todayOpen && todayClosed && todayOpen > todayClosed) {
-      setTodayOpen(todayClosed);
-    }
-  };
-  const handleTodayCloseBlur = () => {
-    if (todayClosed && todayClosed > 18) {
-      setTodayClosed(18);
-    }
-    if (todayClosed && todayOpen && todayClosed < todayOpen) {
-      setTodayClosed(todayOpen);
-    }
-  };
-
-  const handleTomorrowOpenBlur = () => {
-    if (tomorrowOpen && tomorrowOpen < 8) {
-      setTomorrowOpen(8);
-    }
-    if (tomorrowOpen && tomorrowClosed && tomorrowOpen > tomorrowClosed) {
-      setTomorrowOpen(tomorrowClosed);
-    }
-  };
-  const handleTomorrowCloseBlur = () => {
-    if (tomorrowClosed && tomorrowClosed > 18) {
-      setTomorrowClosed(18);
-    }
-    if (tomorrowClosed && tomorrowOpen && tomorrowClosed < tomorrowOpen) {
-      setTomorrowClosed(tomorrowOpen);
-    }
-  };
+  const [scheduleDays, setScheduleDays] = useState<IDays>([]);
+  const [dayConfig, setDayConfig] = useState<Record<IDay, IDayConfig>>({} as Record<IDay, IDayConfig>);
+  const [appointmentViewDay, setAppointmentViewDay] = useState<IDay | null>(null);
+  const [isCheckForm, setIsCheckForm] = useState(true);
+  const [bulletin, setBulletin] = useState("");
 
   useEffect(() => {
     (async () => {
-      const adminResult = await fetch(`${process.env.REACT_APP_URL}/adminObject`);
-      const adminObjectJSON = await adminResult.text();
-      const adminObject = JSON.parse(adminObjectJSON) as ISchedule;
+      const adminObject = await getAdminSchedule();
+      const days = sortDays(Object.keys(adminObject) as IDays);
 
-      if (adminObject.day0.hours === null) {
-        setIsTodayClosed(true);
-      } else {
-        if (adminObject.day0.hours.length === 2) {
-          const hours = adminObject.day0.hours;
-          setTodayOpen(hours[0]);
-          setTodayClosed(hours[1]);
-        }
-      }
-      if (adminObject.day1.hours === null) {
-        setIsTomorrowClosed(true);
-      } else {
-        if (adminObject.day1.hours.length === 2) {
-          const hours = adminObject.day1.hours;
-          setTomorrowOpen(hours[0]);
-          setTomorrowClosed(hours[1]);
-        }
+      setScheduleDays(days);
+
+      const nextDayConfig = {} as Record<IDay, IDayConfig>;
+
+      days.forEach((day) => {
+        const hours = adminObject[day]?.hours;
+
+        nextDayConfig[day] = {
+          open: Array.isArray(hours) ? hours[0] : 8,
+          closed: Array.isArray(hours) ? hours[1] : 18,
+          isClosed: hours === null,
+        };
+      });
+
+      setDayConfig(nextDayConfig);
+    })();
+
+    (async () => {
+      try {
+        const result = await fetch(`${process.env.REACT_APP_URL}/get-bulletin`);
+        setBulletin(await result.text());
+      } catch (e) {
+        return;
       }
     })();
   }, []);
 
-  const [isCheckForm, setIsCheckForm] = useState(true);
+  const clampDayConfig = (config: IDayConfig): IDayConfig => {
+    const open = Number.isFinite(config.open) ? Math.max(8, Math.min(18, config.open)) : 8;
+    const closed = Number.isFinite(config.closed) ? Math.max(8, Math.min(18, config.closed)) : 18;
+
+    return {
+      ...config,
+      open: Math.min(open, closed),
+      closed: Math.max(closed, open),
+    };
+  };
+
+  const updateDayConfig = (day: IDay, nextPartial: Partial<IDayConfig>) => {
+    setIsCheckForm(true);
+    setDayConfig((current) => ({
+      ...current,
+      [day]: {
+        ...current[day],
+        ...nextPartial,
+      },
+    }));
+  };
+
+  const handleBlur = (day: IDay) => {
+    setDayConfig((current) => ({
+      ...current,
+      [day]: clampDayConfig(current[day]),
+    }));
+  };
 
   const handleSave = async () => {
-    const Today = { hours: isTodayClosed ? null : [todayOpen, todayClosed] };
-    const Tomorrow = { hours: isTomorrowClosed ? null : [tomorrowOpen, tomorrowClosed] };
+    const requestBody = scheduleDays.reduce((acc, day) => {
+      const config = clampDayConfig(dayConfig[day]);
 
-    const request = JSON.stringify({ Today, Tomorrow });
+      acc[day] = {
+        hours: config.isClosed ? null : [config.open, config.closed],
+      };
+
+      return acc;
+    }, {} as Record<IDay, { hours: number[] | null }>);
 
     setIsCheckForm(true);
 
     try {
       await fetch(`${process.env.REACT_APP_URL}/adminUpdateSchedule`, {
         method: "post",
-        body: request,
+        body: JSON.stringify(requestBody),
       });
     } catch (e) {
-    } finally {
+      return;
     }
   };
 
@@ -543,110 +552,66 @@ function AdminLoggedIn({
     setIsCheckForm(true);
   };
 
-  const [isTodayAppointmentView, setIsTodayAppointmentView] = useState(false);
-  const [isTomorrowAppointmentView, setIsTomorrowAppointmentView] = useState(false);
-
   return (
     <Container className={className}>
       <Fog show={showModal} />
       {showModal && (
         <StyledModal employee={selected} show={showModal} setShowModal={setShowModal} />
       )}
-      {isTodayAppointmentView && (
-        <StyledAppointmentView day={"Today"} setShow={setIsTodayAppointmentView} />
-      )}
-      {isTomorrowAppointmentView && (
-        <StyledAppointmentView day={"Tomorrow"} setShow={setIsTomorrowAppointmentView} />
+      {appointmentViewDay && (
+        <StyledAppointmentView dayKey={appointmentViewDay} setShow={() => setAppointmentViewDay(null)} />
       )}
       <div className="group-container">
         <h2>Schedule</h2>
         <div className={"hours-container"}>
-          <div>
-            <span>Day:</span>
-            <span>Closed?</span>
+          <div className="heading-row">
+            <span>Day</span>
+            <span>Open</span>
+            <span>Close</span>
+            <span>Closed</span>
           </div>
-          <br />
-          <div>
-            Today:
-            <div>
-              <input
-                disabled={isTodayClosed}
-                type={"number"}
-                value={todayOpen}
-                onChange={(e) => {
-                  setIsCheckForm(true);
-                  const value = parseInt(e.target.value);
+          {scheduleDays.map((day) => {
+            const config = dayConfig[day];
 
-                  setTodayOpen(value);
-                }}
-                onBlur={handleTodayOpenBlur}
-                onFocus={handleFocus}
-              />
-              <input
-                disabled={isTodayClosed}
-                type={"number"}
-                value={todayClosed}
-                onChange={(e) => {
-                  setIsCheckForm(true);
-                  const value = parseInt(e.target.value);
+            if (!config) {
+              return null;
+            }
 
-                  setTodayClosed(value);
-                }}
-                onBlur={handleTodayCloseBlur}
-                onFocus={handleFocus}
-              />
-              <input
-                checked={isTodayClosed}
-                type="checkbox"
-                onChange={(e) => {
-                  setIsCheckForm(true);
-                  setIsTodayClosed(Boolean(e.target.checked));
-                }}
-                value={Boolean(isTodayClosed) ? "on" : "off"}
-                onFocus={handleFocus}
-              />
-            </div>
-          </div>
-          <div>
-            Tomorrow:
-            <div>
-              <input
-                disabled={isTomorrowClosed}
-                type={"number"}
-                value={tomorrowOpen}
-                onChange={(e) => {
-                  setIsCheckForm(true);
-                  const value = parseInt(e.target.value);
-
-                  setTomorrowOpen(value);
-                }}
-                onBlur={handleTomorrowOpenBlur}
-                onFocus={handleFocus}
-              />
-              <input
-                disabled={isTomorrowClosed}
-                type={"number"}
-                value={tomorrowClosed}
-                onChange={(e) => {
-                  setIsCheckForm(true);
-                  const value = parseInt(e.target.value);
-
-                  setTomorrowClosed(value);
-                }}
-                onBlur={handleTomorrowCloseBlur}
-                onFocus={handleFocus}
-              />
-              <input
-                checked={isTomorrowClosed}
-                type="checkbox"
-                onChange={(e) => {
-                  setIsCheckForm(true);
-                  setIsTomorrowClosed(Boolean(e.target.checked));
-                }}
-                onFocus={handleFocus}
-              />
-            </div>
-          </div>
+            return (
+              <div key={day}>
+                <span>{getDayLabel(day)}</span>
+                <input
+                  disabled={config.isClosed}
+                  type={"number"}
+                  value={config.open}
+                  onChange={(e) => {
+                    updateDayConfig(day, { open: parseInt(e.target.value, 10) });
+                  }}
+                  onBlur={() => handleBlur(day)}
+                  onFocus={handleFocus}
+                />
+                <input
+                  disabled={config.isClosed}
+                  type={"number"}
+                  value={config.closed}
+                  onChange={(e) => {
+                    updateDayConfig(day, { closed: parseInt(e.target.value, 10) });
+                  }}
+                  onBlur={() => handleBlur(day)}
+                  onFocus={handleFocus}
+                />
+                <input
+                  checked={config.isClosed}
+                  type="checkbox"
+                  onChange={(e) => {
+                    updateDayConfig(day, { isClosed: Boolean(e.target.checked) });
+                  }}
+                  value={Boolean(config.isClosed) ? "on" : "off"}
+                  onFocus={handleFocus}
+                />
+              </div>
+            );
+          })}
           <SaveButton
             isCheckForm={isCheckForm}
             onClick={async () => {
@@ -664,31 +629,50 @@ function AdminLoggedIn({
       <div className="group-container">
         <h2>View Appointments</h2>
         <div className="hours-container">
-          <div>
-            <span>Today's: </span>
-            <div>
-              <button
-                onClick={() => {
-                  setIsTodayAppointmentView(true);
-                }}
-              >
-                Today
-              </button>
+          {scheduleDays.map((day) => (
+            <div key={day}>
+              <span>{getDayLabel(day)}</span>
+              <div>
+                <button
+                  onClick={() => {
+                    setAppointmentViewDay(day);
+                  }}
+                >
+                  View
+                </button>
+              </div>
             </div>
-          </div>
-          <br />
-          <div>
-            <span>Tomorrow's: </span>
-            <div>
-              <button
-                onClick={async () => {
-                  setIsTomorrowAppointmentView(true);
-                }}
-              >
-                Tomorrow
-              </button>
-            </div>
-          </div>
+          ))}
+        </div>
+      </div>
+      <div className="group-container bulletin-group">
+        <h2>Bulletin</h2>
+        <div className="bulletin-container">
+          <textarea
+            value={bulletin}
+            placeholder="Enter bulletin text"
+            onChange={(e) => {
+              setBulletin(e.target.value);
+            }}
+          />
+          <button
+            onClick={async () => {
+              await fetch(`${process.env.REACT_APP_URL}/save-bulletin`, {
+                method: "post",
+                body: bulletin,
+              });
+            }}
+          >
+            Save Bulletin
+          </button>
+          <button
+            onClick={async () => {
+              await fetch(`${process.env.REACT_APP_URL}/delete-bulletin`);
+              setBulletin("");
+            }}
+          >
+            Delete Bulletin
+          </button>
         </div>
       </div>
       <div className="group-container">
@@ -710,9 +694,10 @@ function AdminLoggedIn({
 }
 
 export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   display: flex;
+  flex-wrap: wrap;
 
   background-color: white;
 
@@ -724,32 +709,63 @@ export const StyledAdminLoggedIn = styled(AdminLoggedIn)`
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    margin: 0em 3em;
-    height: 30em;
-    width: 18em;
+    justify-content: flex-start;
+    margin: 2em 3em;
+    min-height: 30em;
+    width: 22em;
+  }
+
+  .bulletin-group {
+    width: 24em;
   }
 
   .hours-container {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    width: 18em;
+    width: 100%;
+    gap: 0.6em;
 
-    div {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
+    > div {
+      display: grid;
+      grid-template-columns: minmax(5.5em, 1fr) 4em 4em 4em;
+      align-items: center;
+      column-gap: 0.75em;
+    }
 
-      input {
-        width: 3em;
-      }
+    .heading-row {
+      font-weight: bold;
+    }
 
-      button {
-        width: 6.5em;
-        height: 2.5em;
-        margin: 0;
-      }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 6.5em;
+      height: 2.5em;
+      margin: 0;
+    }
+  }
+
+  .bulletin-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.9em;
+
+    textarea {
+      min-height: 10em;
+      resize: vertical;
+      padding: 0.9em;
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin: 0;
+      height: 2.8em;
     }
   }
 

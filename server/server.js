@@ -10,6 +10,34 @@ const uuid = require("uuid").v4;
 
 //#region runtime setup
 
+/**
+ * TS Reference
+ * 
+
+  type DayKey = `day${number}`;
+
+  type AppointmentDay = "Today" | DayKey;
+
+  interface Appointment {
+    day: AppointmentDay;
+    time: string; // e.g. "8:00 AM"
+    barber: string;
+    name: string;
+    phone: string;
+    token: string; // UUID
+  }
+
+  interface DaySchedule {
+    hours: [number, number];
+    appts: Appointment[];
+  }
+
+  type Schedule = Record<DayKey, DaySchedule>;
+
+ * 
+ */
+
+
 const app = express();
 
 app.use(express.static(path.join(__dirname, "build")));
@@ -19,11 +47,10 @@ app.use(express.text());
 const PORT = process.env.PORT || 3001;
 const tz = process.env.TZ || "America/Chicago";
 
-let mode = "init";
-
 let Bucket = process.env.AWS_BUCKET;
-let Filename = process.env.AWS_SCHEDULE_FILE;
+let Filename //= process.env.AWS_SCHEDULE_FILE;
 let scheduleJson;
+let bulletin = null;
 
 if (process.env.DEVELOPMENT === "true") {
   const obj = {
@@ -32,10 +59,10 @@ if (process.env.DEVELOPMENT === "true") {
     region: process.env.AWS_REGION,
   };
   AWS.config.update(obj);
-  Filename = process.env.AWS_SCHEDULE_FILE;
+  Filename = 'new-schedule-data.json' //process.env.AWS_SCHEDULE_FILE;
   app.listen(PORT, () => console.log(`app listening on port ${process.env.PORT || PORT}`));
 } else {
-  Filename = process.env.AWS_PROD_SCHEDULE_FILE;
+  Filename = 'new-test-schedule-data.json' //process.env.AWS_PROD_SCHEDULE_FILE;
   const httpsOptions = {
     cert: fs.readFileSync(path.join(__dirname, ".", "fullchain.pem")),
     key: fs.readFileSync(path.join(__dirname, ".", "privkey.pem")),
@@ -51,18 +78,21 @@ const s3 = new AWS.S3();
 
 //#region time setup
 
-let date = moment().tz(tz);
 let lastRequestTimestamp;
 
 const setPersistentLastRequestTimestamp = (timestamp) => {
-  fs.writeFileSync("./lastTimestamp.txt", timestamp.toString());
+  fs.writeFileSync("./lastTimestamp.txt", timestamp.toISOString());
 };
 
 try {
-  lastRequestTimestamp = moment(fs.readFileSync("./lastTimestamp.txt").toString()).tz(tz);
+  const rawTimestamp = fs.readFileSync("./lastTimestamp.txt").toString().trim();
+  lastRequestTimestamp = moment.tz(rawTimestamp, moment.ISO_8601, tz);
+  if (!lastRequestTimestamp.isValid()) {
+    throw new Error("Invalid persisted timestamp");
+  }
 } catch (e) {
   lastRequestTimestamp = moment().tz(tz);
-  fs.writeFileSync("./lastTimestamp.txt", date.toString());
+  setPersistentLastRequestTimestamp(lastRequestTimestamp);
 }
 
 let employees;
@@ -77,42 +107,60 @@ try {
   fs.writeFileSync("./employees.txt", JSON.stringify(employees));
 }
 
-const day = date.day();
+const SCHEDULE_WINDOW_DAYS = 7;
 
 const defaultSched = Object.freeze({
-  0: null,
-  1: null,
-  2: [8, 18],
-  3: [8, 18],
-  4: [8, 18],
-  5: [8, 18],
-  6: [8, 14],
+  0: null, // sun
+  1: null, // mon
+  2: [8, 18], // tues
+  3: [8, 18], // wed
+  4: [8, 18], // thurs
+  5: [8, 18], // fri
+  6: [8, 14], // sat
 });
 
-let schedule = {
-  day0: {
-    hours: day !== 0 || day !== 1 ? defaultSched[day.toString()] : null,
-    appts: [],
-  },
-  day1: {
-    hours: day !== 0 || day !== 1 ? defaultSched[((day + 1) % 7).toString()] : null,
-    appts: [
-      // { name: "joe", phone: 1234567890, time: "10:30 AM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "9:30 AM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "9:00 AM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "10:00 AM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "2:30 PM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "12:00 PM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "12:30 PM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "1:00 PM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "2:00 PM", barber: "mitch" },
-      // { name: "joey", phone: 1234657890, time: "3:00 PM", barber: "mitch" },
-      // { name: "jooe", phone: 2234657890, time: "3:30 PM", barber: "mitch" },
-      // { name: "jsadgooe", phone: 2234659990, time: "1:30 PM", barber: "mitch" },
-    ],
-  },
-  day2: { hours: null, appts: [] },
+const makeDayIntoString = (dayNum, offset = 0) => ((dayNum + offset) % 7).toString();
+
+const getCurrentDay = () => moment().tz(tz).day();
+
+const makeScheduleKey = (offset) => `day${offset}`;
+
+const buildEmptyDaySchedule = (baseDay, offset) => ({
+  hours: defaultSched[makeDayIntoString(baseDay, offset)],
+  appts: [],
+});
+
+const buildScheduleWindow = (baseDay = getCurrentDay()) => {
+  let nextSchedule = {};
+
+  for (let offset = 0; offset <= SCHEDULE_WINDOW_DAYS; offset++) {
+    nextSchedule[makeScheduleKey(offset)] = buildEmptyDaySchedule(baseDay, offset);
+  }
+
+  return nextSchedule;
 };
+
+const normalizeSchedule = (rawSchedule = {}, baseDay = getCurrentDay()) => {
+  const nextSchedule = buildScheduleWindow(baseDay);
+
+  for (let offset = 0; offset <= SCHEDULE_WINDOW_DAYS; offset++) {
+    const key = makeScheduleKey(offset);
+    const rawDay = rawSchedule?.[key];
+
+    if (!rawDay || typeof rawDay !== "object") {
+      continue;
+    }
+
+    nextSchedule[key] = {
+      hours: Array.isArray(rawDay.hours) ? rawDay.hours : nextSchedule[key].hours,
+      appts: Array.isArray(rawDay.appts) ? rawDay.appts : [],
+    };
+  }
+
+  return nextSchedule;
+};
+
+let schedule = buildScheduleWindow();
 
 const makeHours = (start, hours) => {
   if (typeof start === "number" && typeof hours === "number") {
@@ -121,9 +169,8 @@ const makeHours = (start, hours) => {
     for (let i = 0; i < hours; i++) {
       for (let j = 0; j < 2; j++) {
         let offset = start + i;
-        let str = `${offset > 12 ? offset - 12 : offset}:${j === 0 ? "00" : "30"} ${
-          offset >= 12 ? "PM" : "AM"
-        }`;
+        let str = `${offset > 12 ? offset - 12 : offset}:${j === 0 ? "00" : "30"} ${offset >= 12 ? "PM" : "AM"
+          }`;
         a.push(str);
       }
     }
@@ -192,26 +239,8 @@ const filterArray = (array1, array2) => {
 // };
 
 const getAvailableTimes = (schedule) => {
-  const todayHoursRange = schedule.day0.hours;
-  const tomorrowHoursRange = schedule.day1.hours;
-
-  const todayAppts = schedule.day0.appts;
-  const tomorrowAppts = schedule.day1.appts;
   let employeeTimes = {};
 
-  let todayHoursArray = null;
-  let tomorrowHoursArray = null;
-
-  if (todayHoursRange) {
-    todayHoursArray = makeHours(todayHoursRange[0], todayHoursRange[1] - todayHoursRange[0]);
-  }
-
-  if (tomorrowHoursRange) {
-    tomorrowHoursArray = makeHours(
-      tomorrowHoursRange[0],
-      tomorrowHoursRange[1] - tomorrowHoursRange[0]
-    );
-  }
   const getEmployeeAvailability = (employee, appts, hoursArray, day = "today") => {
     const myHours = appts.filter((appt) => appt.barber === employee);
 
@@ -222,61 +251,30 @@ const getAvailableTimes = (schedule) => {
     );
     return [...employeeAvailability];
   };
-  if (todayHoursArray) {
-    employees.forEach((employee) => {
-      employeeTimes[employee] = {
-        day0: getEmployeeAvailability(employee, todayAppts, todayHoursArray, "today"),
-        day1: null,
-      };
-    });
-  } else {
-    employees.forEach((employee) => {
-      employeeTimes[employee] = {
-        day0: null,
-        day1: null,
-      };
-    });
-  }
 
-  if (tomorrowHoursArray) {
-    employees.forEach((employee) => {
-      employeeTimes[employee]["day1"] = getEmployeeAvailability(
+  employees.forEach((employee) => {
+    employeeTimes[employee] = {};
+
+    for (let offset = 0; offset <= SCHEDULE_WINDOW_DAYS; offset++) {
+      const key = makeScheduleKey(offset);
+      const daySchedule = schedule[key];
+      const hoursRange = daySchedule?.hours;
+
+      if (!hoursRange) {
+        employeeTimes[employee][key] = null;
+        continue;
+      }
+
+      const hoursArray = makeHours(hoursRange[0], hoursRange[1] - hoursRange[0]);
+
+      employeeTimes[employee][key] = getEmployeeAvailability(
         employee,
-        tomorrowAppts,
-        tomorrowHoursArray,
-        "tomorrow"
+        daySchedule.appts,
+        hoursArray,
+        offset === 0 ? "today" : key
       );
-    });
-  }
-
-  // Today = filterTimesAfterCurrent(Today, tz);
-  // if (today.length) {
-  //   Today = filterArray(
-  //     Today,
-  //     today.map((appt) => appt.time)
-  //   );
-  // }
-  // if (todayHoursRange && todayHoursRange[1] >= 15) {
-  //   const removedArray = removeTime(Today, "12:30 PM");
-  //   if (removedArray) {
-  //     Today = removedArray;
-  //   }
-  // }
-
-  // if (Tomorrow && tomorrow.length) {
-  //   Tomorrow = filterArray(
-  //     Tomorrow,
-  //     tomorrow.map((appt) => appt.time)
-  //   );
-  // }
-  // if (tomorrowHoursRange && tomorrowHoursRange[1] >= 15) {
-  //   const removedArray = removeTime(Tomorrow, "12:30 PM");
-  //   if (removedArray) {
-  //     Tomorrow = removedArray;
-  //   }
-  // }
-
-  //return { Today, Tomorrow };
+    }
+  });
 
   return employeeTimes;
 };
@@ -295,30 +293,36 @@ const checkDayElapsed = (tz) => {
     .clone()
     .startOf("day")
     .diff(lastRequestTimestamp.clone().startOf("day"), "days");
-  const todayHours = defaultSched[currentDay] ? [...defaultSched[currentDay]] : null;
-  const tomorrowHours = defaultSched[(currentDay + 1) % 7]
-    ? [...defaultSched[(currentDay + 1) % 7]]
-    : null;
 
   lastRequestTimestamp = currentTime;
   setPersistentLastRequestTimestamp(lastRequestTimestamp);
 
-  if (daysElapsed === 1) {
-    const appts = [...schedule.day1.appts].map((appt) => ({ ...appt, day: "Today" }));
-    schedule.day1.appts = appts;
-    schedule.day0 = { ...schedule.day1 };
-    schedule.day1.appts = [];
-    schedule.day1.hours = tomorrowHours;
+  if (daysElapsed <= 0) {
     return;
   }
 
-  if (daysElapsed > 1) {
-    schedule.day0.appts = [];
-    schedule.day0.hours = todayHours;
-    schedule.day1.appts = [];
-    schedule.day1.hours = tomorrowHours;
+  if (daysElapsed > SCHEDULE_WINDOW_DAYS) {
+    schedule = buildScheduleWindow(currentDay);
     return;
   }
+
+  const nextSchedule = {};
+
+  for (let offset = 0; offset <= SCHEDULE_WINDOW_DAYS; offset++) {
+    const key = makeScheduleKey(offset);
+    const sourceKey = makeScheduleKey(offset + daysElapsed);
+    const sourceDay = schedule[sourceKey];
+
+    nextSchedule[key] = {
+      hours: sourceDay?.hours ?? buildEmptyDaySchedule(currentDay, offset).hours,
+      appts: (sourceDay?.appts ?? []).map((appt) => ({
+        ...appt,
+        day: offset === 0 ? "Today" : key,
+      })),
+    };
+  }
+
+  schedule = nextSchedule;
 };
 
 //#endregion time functions
@@ -358,8 +362,7 @@ function getFile(Bucket, Key = Filename) {
       console.log(err, err.stack);
     } else {
       scheduleJson = JSON.parse(data.Body.toString("utf-8"));
-      schedule = scheduleJson;
-      mode = "ready";
+      schedule = normalizeSchedule(scheduleJson);
     }
   });
 }
@@ -378,6 +381,7 @@ app.get("/addDay/:id", (req, res) => {
 app.get("/clientObject", (req, res) => {
   checkDayElapsed(tz);
   const timesObject = getAvailableTimes(schedule);
+
   const token = uuid();
 
   res.write(JSON.stringify({ barbers: { ...timesObject }, token }));
@@ -387,6 +391,27 @@ app.get("/clientObject", (req, res) => {
 app.get("/adminObject", (req, res) => {
   checkDayElapsed(tz);
   res.write(JSON.stringify(schedule));
+  return res.end();
+});
+
+app.get("/get-bulletin", (req, res) => {
+  res.write(typeof bulletin === "string" ? bulletin : "");
+  return res.end();
+});
+
+app.post("/save-bulletin", (req, res) => {
+  if (typeof req.body !== "string") {
+    return res.status(400).end();
+  }
+
+  bulletin = req.body.trim();
+  res.status(200);
+  return res.end();
+});
+
+app.get("/delete-bulletin", (req, res) => {
+  bulletin = null;
+  res.status(200);
   return res.end();
 });
 
@@ -415,13 +440,26 @@ app.get("/adminTomorrowAppts", (req, res) => {
   return res.end();
 });
 
-app.post("/adminUpdateSchedule", (req, res) => {
+app.post("/adminUpdateSchedule", async (req, res) => {
   checkDayElapsed(tz);
   const result = JSON.parse(req.body);
 
-  const { Today: day0, Tomorrow: day1 } = result;
-  schedule.day0.hours = day0.hours;
-  schedule.day1.hours = day1.hours;
+  if (result?.Today?.hours) {
+    schedule.day0.hours = result.Today.hours;
+  }
+
+  if (result?.Tomorrow?.hours) {
+    schedule.day1.hours = result.Tomorrow.hours;
+  }
+
+  for (let offset = 0; offset <= SCHEDULE_WINDOW_DAYS; offset++) {
+    const key = makeScheduleKey(offset);
+    if (result?.[key]?.hours) {
+      schedule[key].hours = result[key].hours;
+    }
+  }
+
+  await uploadFile(Bucket, schedule);
 
   res.status(200);
   return res.end();
@@ -440,6 +478,10 @@ app.post("/newAppointment", async (req, res) => {
     typeof token !== "string"
   ) {
     return res.status(400);
+  }
+
+  if (!schedule[day]) {
+    return res.status(400).end();
   }
 
   const existingAppts = schedule[day].appts;
@@ -470,11 +512,14 @@ app.post("/newAppointment", async (req, res) => {
   return res.end();
 });
 
-app.post("/deleteAppointment", (req, res) => {
+app.post("/deleteAppointment", async (req, res) => {
   const token = req.body;
 
-  schedule.day0.appts = schedule.day0.appts.filter((appt) => appt.token !== token);
-  schedule.day1.appts = schedule.day1.appts.filter((appt) => appt.token !== token);
+  Object.keys(schedule).forEach((dayKey) => {
+    schedule[dayKey].appts = schedule[dayKey].appts.filter((appt) => appt.token !== token);
+  });
+
+  await uploadFile(Bucket, schedule);
 
   res.status(200);
   return res.end();
@@ -513,7 +558,6 @@ app.post("/deleteEmployee", async (req, res) => {
         }),
       ];
     });
-
     await uploadFile(Bucket, schedule);
     res.status(200);
   } else {

@@ -12,8 +12,32 @@ import { colors } from "./utilities";
 
 const tz = process.env.TZ || "America/Chicago";
 const localStorageScheduledTime = "scheduledTime";
+const maxBookableDayOffset = 7;
 
 //#endregion env vars
+
+//#region day helpers
+
+const getDayOffset = (day: IDay) => parseInt(day.replace("day", ""), 10);
+
+const sortDays = (days: IDays) => [...days].sort((a, b) => getDayOffset(a) - getDayOffset(b));
+
+const getDayLabel = (day: IDay) => {
+  const offset = getDayOffset(day);
+  const dateLabel = moment().tz(tz).add(offset, "days").format("M/D");
+
+  if (offset === 0) {
+    return `Today - ${dateLabel}`;
+  }
+
+  if (offset === 1) {
+    return `Tomorrow - ${dateLabel}`;
+  }
+
+  return `${moment().tz(tz).add(offset, "days").format("dddd")} - ${dateLabel}`;
+};
+
+//#endregion day helpers
 
 //#region layout
 
@@ -258,6 +282,7 @@ const BaseBarbers = ({
               <div
                 onClick={() => setBarber($barber)}
                 className={`${$barber === barber && "selected-barber"} barber-button`}
+                key={$barber}
               >
                 {$barber}
               </div>
@@ -330,7 +355,7 @@ const BaseDays = ({
           value={day}
         >
           {days.map((day) => (
-            <option value={day}>{day === "day0" ? "Today" : "Tomorrow"}</option>
+            <option value={day} key={day}>{getDayLabel(day)}</option>
           ))}
         </select>
       </div>
@@ -381,6 +406,7 @@ const BaseTimes = ({
   setTime,
   day,
   barber,
+  isClosed,
   NoAvailabilityComponent,
   className,
 }: {
@@ -389,12 +415,14 @@ const BaseTimes = ({
   setTime: (time: string) => void;
   day: IDay;
   barber: string | null;
+  isClosed: boolean;
   NoAvailabilityComponent: IStyledComponent<
     "web",
     FastOmit<
       {
         day: IDay | null;
         barber: string | null;
+        isClosed: boolean;
         className?: string | undefined;
       },
       never
@@ -415,13 +443,13 @@ const BaseTimes = ({
               value={time}
             >
               {times.map((time) => (
-                <option>{time}</option>
+                <option value={time} key={time}>{time}</option>
               ))}
             </select>
           </div>
         </>
       )}
-      {!time && barber && <NoAvailabilityComponent barber={barber} day={day} />}
+      {!time && barber && <NoAvailabilityComponent barber={barber} day={day} isClosed={isClosed} />}
     </div>
   );
 };
@@ -525,14 +553,18 @@ const StyledCancel = styled.div`
 const BaseNoAvailability = ({
   day,
   barber,
+  isClosed,
   className,
 }: {
   day: IDay | null;
   barber: string | null;
+  isClosed: boolean;
   className?: string;
 }) => (
   <span className={className}>
-    {barber ? `${barber} Has ` : ""}No Availability {day === "day0" ? "Today" : "Tomorrow"}
+    {isClosed
+      ? `${day ? getDayLabel(day) : "This day"} is Closed!`
+      : `${barber ? `${barber} Has ` : ""}No Availability ${day ? getDayLabel(day) : ""}`}
   </span>
 );
 
@@ -723,7 +755,7 @@ const BaseConflictView = ({
       <h2>Uh oh</h2>
       <div className={"do-you-want"}>Looks like someone JUST scheduled that time!!</div>
       <h2 className={"time"}>
-        {time} {day}
+        {time} {day ? getDayLabel(day) : ""}
       </h2>
       <div className={"button-layout"}>
         <StyledConfirm className={"tertiary"} onClick={() => onDone()}>
@@ -813,14 +845,16 @@ const checkIfAlreadyScheduled = async (): Promise<boolean> =>
         if (typeof scheduledTime === "number") {
           const currentTime = moment.tz(tz);
           if (currentTime.valueOf() < scheduledTime) {
-            const currentDay = currentTime.day();
-            const scheduledDay = moment.tz(scheduledTime, tz).day();
-            if (currentDay === scheduledDay) {
-              localStorage.setItem("scheduledDay", "Today");
-            } else {
-              localStorage.setItem("scheduledDay", "Tomorrow");
+            const scheduledMoment = moment.tz(scheduledTime, tz);
+            const dayOffset = scheduledMoment.clone().startOf("day").diff(
+              currentTime.clone().startOf("day"),
+              "days"
+            );
+
+            if (dayOffset >= 0 && dayOffset <= maxBookableDayOffset) {
+              localStorage.setItem("scheduledDay", getDayLabel(`day${dayOffset}` as IDay));
+              resolve(true);
             }
-            resolve(true);
           }
         }
       }
@@ -830,11 +864,12 @@ const checkIfAlreadyScheduled = async (): Promise<boolean> =>
 
 const setLocalStorage = (day: IDay | null, time: string | null, token: string | null) => {
   let time1 = moment(time, "h:mm A");
-  if (day === "day1") {
-    time1.add(1, "day");
-    localStorage.setItem("scheduledDay", "Tomorrow");
-  } else {
-    localStorage.setItem("scheduledDay", "Today");
+  if (day) {
+    const dayOffset = getDayOffset(day);
+    if (dayOffset > 0) {
+      time1.add(dayOffset, "day");
+    }
+    localStorage.setItem("scheduledDay", getDayLabel(day));
   }
 
   localStorage.setItem(localStorageScheduledTime, time1.valueOf().toString());
@@ -851,12 +886,13 @@ const setLocalStorage = (day: IDay | null, time: string | null, token: string | 
 export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => void }) {
   const [barber, setBarber] = useState<string | null>(null);
   const [barbers, setBarbers] = useState<string[] | null>(null);
-  const [day, setDay] = useState<IDay>("day1");
-  const days: IDays = ["day0", "day1"];
+  const [day, setDay] = useState<IDay>("day0");
+  const [days, setDays] = useState<IDays>([]);
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [times, setTimes] = useState<string[] | null>(null);
+  const [isClosed, setIsClosed] = useState(false);
   const [token, setToken] = useState<string>("");
   const [clientObject, setClientObject] = useState<IClientObject | null>(null);
   const [mode, setMode] = useState<IMode>("loading");
@@ -878,13 +914,20 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
 
         if (barbers && barbers.length) {
           const barber = barbers[0];
-          const times = barberObject[barber][day];
+          const availableDays = sortDays(Object.keys(barberObject[barber]) as IDays);
+          const selectedDay = availableDays[0] ?? "day0";
+          const times = barberObject[barber][selectedDay];
 
+          setDays(availableDays);
           setBarbers(barbers);
           setBarber(barber);
+          setDay(selectedDay);
           setTimes(times);
+          setIsClosed(times === null);
           if (times && times.length) {
             setTime(times[0]);
+          } else {
+            setTime(null);
           }
         }
 
@@ -897,16 +940,25 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
             setMode("form");
           }
         });
-      } catch (e) {}
+      } catch (e) { }
     })();
-  }, [mode, day]);
+  }, [mode]);
 
   useEffect(() => {
     if (clientObject && barber) {
-      const times = clientObject.barbers[barber][day];
+      const barberDays = clientObject.barbers[barber];
+      const hasSelectedDay = Object.prototype.hasOwnProperty.call(barberDays, day);
+      const nextDay = hasSelectedDay ? day : ((Object.keys(barberDays)[0] as IDay | undefined) ?? "day0");
+      const times = barberDays[nextDay];
 
-      setTimes(times?.length ? times : null);
-      if (times) {
+      if (nextDay !== day) {
+        setDay(nextDay);
+        return;
+      }
+
+      setIsClosed(times === null);
+      setTimes(times);
+      if (times && times.length) {
         setTime(times[0]);
       } else {
         setTime(null);
@@ -958,6 +1010,7 @@ export function ScheduleForm({ setShowForm }: { setShowForm: (show: boolean) => 
               times={times}
               day={day}
               barber={barber}
+              isClosed={isClosed}
               NoAvailabilityComponent={NoAvailability}
             />
             <StyledConfirm
