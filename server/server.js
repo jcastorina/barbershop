@@ -443,18 +443,20 @@ app.get("/adminTomorrowAppts", (req, res) => {
 app.post("/adminUpdateSchedule", async (req, res) => {
   checkDayElapsed(tz);
   const result = JSON.parse(req.body);
+  const hasHours = (value) =>
+    Boolean(value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "hours"));
 
-  if (result?.Today?.hours) {
+  if (hasHours(result?.Today)) {
     schedule.day0.hours = result.Today.hours;
   }
 
-  if (result?.Tomorrow?.hours) {
+  if (hasHours(result?.Tomorrow)) {
     schedule.day1.hours = result.Tomorrow.hours;
   }
 
   for (let offset = 0; offset <= SCHEDULE_WINDOW_DAYS; offset++) {
     const key = makeScheduleKey(offset);
-    if (result?.[key]?.hours) {
+    if (hasHours(result?.[key])) {
       schedule[key].hours = result[key].hours;
     }
   }
